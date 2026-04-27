@@ -1,0 +1,41 @@
+@page
+@model BrownFlannelTavernStore.Pages.Admin.Products.IndexModel
+@{
+    ViewData["Title"] = "Manage Products";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Manage Products</h2>
+    <a asp-page="/Admin/Products/Create" class="btn btn-bft">Add Product</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Variants</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model.Products)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td>@product.Name</td>
+                <td>@product.Category</td>
+                <td>$@product.Price.ToString("F2")</td>
+                <td>@product.Variants.Count</td>
+                <td>
+                    <a asp-page="/Admin/Products/Edit" asp-route-id="@product.Id" class="btn btn-sm btn-outline-bft">Edit</a>
+                    <a asp-page="/Admin/Products/Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-page="/Admin/Index" class="btn btn-outline-bft">Back to Dashboard</a>

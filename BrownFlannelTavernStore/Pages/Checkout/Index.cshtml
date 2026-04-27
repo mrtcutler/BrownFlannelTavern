@@ -1,0 +1,125 @@
+@page
+@model BrownFlannelTavernStore.Pages.Checkout.IndexModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2>Checkout</h2>
+
+@if (!Model.CartItems.Any())
+{
+    <p>Your cart is empty.</p>
+    <a asp-page="/Products/Index" class="btn btn-bft">Continue Shopping</a>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-7">
+            <h4>Shipping Information</h4>
+            <form method="post" id="payment-form">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input asp-for="CustomerName" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input asp-for="CustomerEmail" type="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <input asp-for="ShippingAddress" class="form-control" required />
+                </div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label">City</label>
+                        <input asp-for="City" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">State</label>
+                        <input asp-for="State" class="form-control" required />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Zip Code</label>
+                        <input asp-for="ZipCode" class="form-control" required />
+                    </div>
+                </div>
+
+                <h4 class="mt-4">Payment</h4>
+                <div id="card-element" class="form-control mb-3" style="padding-top: 10px;">
+                    <!-- Stripe Elements will mount here -->
+                </div>
+                <div id="card-errors" class="text-danger mb-3" role="alert"></div>
+
+                <input type="hidden" asp-for="PaymentIntentId" id="payment-intent-id" />
+                <input type="hidden" name="stripePaymentMethodId" id="stripe-payment-method-id" />
+
+                <button type="submit" id="submit-button" class="btn btn-bft btn-lg w-100">
+                    Pay $@Model.Total.ToString("F2")
+                </button>
+            </form>
+        </div>
+        <div class="col-md-5">
+            <h4>Order Summary</h4>
+            <ul class="list-group mb-3">
+                @foreach (var item in Model.CartItems)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <div>
+                            <span>@item.ProductName</span>
+                            <small class="text-muted d-block">@item.Size @item.Color x @item.Quantity</small>
+                        </div>
+                        <span>$@item.Total.ToString("F2")</span>
+                    </li>
+                }
+                <li class="list-group-item d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span>$@Model.Total.ToString("F2")</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('@Model.StripePublishableKey');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        cardElement.on('change', function (event) {
+            const displayError = document.getElementById('card-errors');
+            displayError.textContent = event.error ? event.error.message : '';
+        });
+
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+
+            const clientSecret = '@Model.ClientSecret';
+
+            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: document.querySelector('[name="CustomerName"]').value,
+                        email: document.querySelector('[name="CustomerEmail"]').value,
+                    }
+                }
+            });
+
+            if (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                submitButton.disabled = false;
+                submitButton.textContent = 'Pay $@Model.Total.ToString("F2")';
+            } else if (paymentIntent.status === 'succeeded') {
+                document.getElementById('stripe-payment-method-id').value = paymentIntent.payment_method;
+                form.submit();
+            }
+        });
+    </script>
+}

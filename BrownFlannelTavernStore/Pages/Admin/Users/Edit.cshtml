@@ -1,0 +1,52 @@
+@page "{id}"
+@model BrownFlannelTavernStore.Pages.Admin.Users.EditModel
+@using BrownFlannelTavernStore.Data
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<h2>Edit User</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        @if (Model.Errors.Any())
+        {
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach (var error in Model.Errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-success">@Model.Message</div>
+        }
+
+        <form method="post">
+            <input type="hidden" asp-for="UserId" />
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" disabled />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select asp-for="Role" class="form-select">
+                    <option value="@SeedData.ManagerRole">Manager</option>
+                    <option value="@SeedData.OwnerRole">Owner</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">New Password (leave blank to keep current)</label>
+                <input asp-for="NewPassword" type="password" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-bft">Save Changes</button>
+            <a asp-page="/Admin/Users/Index" class="btn btn-outline-bft ms-2">Cancel</a>
+        </form>
+    </div>
+</div>

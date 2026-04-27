@@ -1,0 +1,58 @@
+@page "{id:int}"
+@model BrownFlannelTavernStore.Pages.Orders.ConfirmationModel
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+@if (Model.Order == null)
+{
+    <h2>Order not found.</h2>
+}
+else
+{
+    <div class="text-center py-4">
+        <h2>Thank you for your order!</h2>
+        <p class="lead">Your order #@Model.Order.Id has been placed successfully.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Order Details</h5>
+                    <p><strong>Name:</strong> @Model.Order.CustomerName</p>
+                    <p><strong>Email:</strong> @Model.Order.CustomerEmail</p>
+                    <p><strong>Shipping:</strong> @Model.Order.ShippingAddress, @Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+
+                    <table class="table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Size / Color</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in Model.Order.Lines)
+                            {
+                                <tr>
+                                    <td>@line.ProductName</td>
+                                    <td>@line.Size @(line.Color != null ? $"/ {line.Color}" : "")</td>
+                                    <td>@line.Quantity</td>
+                                    <td>$@((line.UnitPrice * line.Quantity).ToString("F2"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <h5 class="text-end">Total: $@Model.Order.TotalAmount.ToString("F2")</h5>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-page="/Products/Index" class="btn btn-bft">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+}

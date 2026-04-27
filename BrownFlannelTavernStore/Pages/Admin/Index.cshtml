@@ -1,0 +1,75 @@
+@page
+@model BrownFlannelTavernStore.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Admin Dashboard</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Orders</h5>
+                <p class="display-6">@Model.TotalOrders</p>
+                <p class="text-muted">@Model.PendingOrders pending</p>
+                <a asp-page="/Admin/Orders/Index" class="btn btn-bft">Manage Orders</a>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Owner"))
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Products</h5>
+                    <p class="display-6">@Model.TotalProducts</p>
+                    <p class="text-muted">across @Model.TotalCategories categories</p>
+                    <a asp-page="/Admin/Products/Index" class="btn btn-bft">Manage Products</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Users</h5>
+                    <p class="display-6">@Model.TotalUsers</p>
+                    <p class="text-muted">admin accounts</p>
+                    <a asp-page="/Admin/Users/Index" class="btn btn-bft">Manage Users</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row mt-2">
+    <div class="col-md-8">
+        <h4>Recent Orders</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.RecentOrders)
+                {
+                    <tr>
+                        <td>@order.Id</td>
+                        <td>@order.CustomerName</td>
+                        <td>$@order.TotalAmount.ToString("F2")</td>
+                        <td><span class="badge bg-bft">@order.Status</span></td>
+                        <td>@order.CreatedAt.ToString("MM/dd/yyyy")</td>
+                        <td><a asp-page="/Admin/Orders/Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-bft">View</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

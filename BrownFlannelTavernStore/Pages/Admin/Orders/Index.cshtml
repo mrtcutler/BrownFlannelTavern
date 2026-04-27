@@ -1,0 +1,49 @@
+@page
+@model BrownFlannelTavernStore.Pages.Admin.Orders.IndexModel
+@using BrownFlannelTavernStore.Models
+@{
+    ViewData["Title"] = "Manage Orders";
+}
+
+<h2>Manage Orders</h2>
+
+<div class="mb-3">
+    <a asp-page="/Admin/Orders/Index" class="btn btn-sm @(Model.StatusFilter == null ? "btn-bft" : "btn-outline-bft")">All</a>
+    @foreach (var status in Enum.GetValues<OrderStatus>())
+    {
+        <a asp-page="/Admin/Orders/Index" asp-route-status="@status"
+           class="btn btn-sm @(Model.StatusFilter?.ToString() == status.ToString() ? "btn-bft" : "btn-outline-bft")">@status</a>
+    }
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Email</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model.Orders)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.CustomerName</td>
+                <td>@order.CustomerEmail</td>
+                <td>$@order.TotalAmount.ToString("F2")</td>
+                <td><span class="badge bg-bft">@order.Status</span></td>
+                <td>@order.CreatedAt.ToString("MM/dd/yyyy h:mm tt")</td>
+                <td>
+                    <a asp-page="/Admin/Orders/Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-bft">View</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-page="/Admin/Index" class="btn btn-outline-bft">Back to Dashboard</a>

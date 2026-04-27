@@ -1,0 +1,103 @@
+@page "{id:int}"
+@model BrownFlannelTavernStore.Pages.Admin.Products.EditModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+@if (Model.Product == null)
+{
+    <h2>Product not found.</h2>
+}
+else
+{
+    <h2>Edit Product: @Model.Product.Name</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div class="alert alert-success">@Model.Message</div>
+            }
+
+            <form method="post">
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <input type="hidden" asp-for="Product.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input asp-for="Product.Name" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea asp-for="Product.Description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Price</label>
+                        <input asp-for="Product.Price" type="number" step="0.01" min="0.01" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Category</label>
+                        <input asp-for="Product.Category" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Image URL</label>
+                        <input asp-for="Product.ImageUrl" class="form-control" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-bft">Save Changes</button>
+                <a asp-page="/Admin/Products/Index" class="btn btn-outline-bft ms-2">Back to List</a>
+            </form>
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <h4>Variants</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Stock</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var variant in Model.Product.Variants)
+            {
+                <tr>
+                    <td>@variant.Size</td>
+                    <td>@variant.Color</td>
+                    <td>@variant.StockQuantity</td>
+                    <td>
+                        <form method="post" asp-page-handler="DeleteVariant" class="d-inline">
+                            <input type="hidden" name="variantId" value="@variant.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h5>Add Variant</h5>
+    <form method="post" asp-page-handler="AddVariant">
+        <input type="hidden" name="productId" value="@Model.Product.Id" />
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <input asp-for="NewVariant.Size" class="form-control" placeholder="Size" required />
+            </div>
+            <div class="col-md-3 mb-3">
+                <input asp-for="NewVariant.Color" class="form-control" placeholder="Color" required />
+            </div>
+            <div class="col-md-3 mb-3">
+                <input asp-for="NewVariant.StockQuantity" type="number" min="0" class="form-control" placeholder="Stock Qty" required />
+            </div>
+            <div class="col-md-3 mb-3">
+                <button type="submit" class="btn btn-outline-bft">Add Variant</button>
+            </div>
+        </div>
+    </form>
+}

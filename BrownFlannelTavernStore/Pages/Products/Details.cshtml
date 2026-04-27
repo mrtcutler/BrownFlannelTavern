@@ -1,0 +1,83 @@
+@page "{id:int}"
+@model BrownFlannelTavernStore.Pages.Products.DetailsModel
+@{
+    ViewData["Title"] = Model.Product?.Name ?? "Product";
+}
+
+@if (Model.Product == null)
+{
+    <h2>Product not found.</h2>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+            {
+                <img src="@Model.Product.ImageUrl" class="img-fluid rounded" alt="@Model.Product.Name" />
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center p-5 bg-light">
+                        <span class="text-muted">No image available</span>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-6">
+            <h2>@Model.Product.Name</h2>
+            <p class="text-muted">@Model.Product.Category</p>
+            <p>@Model.Product.Description</p>
+            <h4 class="mb-4">$@Model.Product.Price.ToString("F2")</h4>
+
+            <form method="post">
+                <input type="hidden" asp-for="ProductId" value="@Model.Product.Id" />
+
+                @if (Model.AvailableSizes.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Size</label>
+                        <select asp-for="SelectedSize" class="form-select">
+                            <option value="">Select Size</option>
+                            @foreach (var size in Model.AvailableSizes)
+                            {
+                                <option value="@size">@size</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                @if (Model.AvailableColors.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <select asp-for="SelectedColor" class="form-select">
+                            <option value="">Select Color</option>
+                            @foreach (var color in Model.AvailableColors)
+                            {
+                                <option value="@color">@color</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Quantity</label>
+                    <input asp-for="Quantity" type="number" min="1" value="1" class="form-control" style="width: 100px;" />
+                </div>
+
+                <button type="submit" class="btn btn-bft btn-lg">Add to Cart</button>
+            </form>
+
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div class="alert alert-success mt-3">@Model.Message</div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger mt-3">@Model.ErrorMessage</div>
+            }
+        </div>
+    </div>
+}

@@ -1,0 +1,113 @@
+:root {
+  --bft-brown: #5C3A1E;
+  --bft-brown-dark: #3E2712;
+  --bft-brown-light: #7A5230;
+  --bft-tan: #D4A96A;
+  --bft-cream: #F5EDE0;
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--bft-tan);
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background-color: var(--bft-cream);
+  color: #2c2c2c;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+/* Navbar */
+.navbar-bft {
+  background-color: var(--bft-brown-dark) !important;
+}
+
+.navbar-bft .navbar-brand {
+  color: var(--bft-tan);
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+
+.navbar-bft .navbar-brand:hover {
+  color: #fff;
+}
+
+.navbar-bft .nav-link {
+  color: var(--bft-cream) !important;
+}
+
+.navbar-bft .nav-link:hover {
+  color: var(--bft-tan) !important;
+}
+
+/* Brown buttons */
+.btn-bft {
+  background-color: var(--bft-brown);
+  border-color: var(--bft-brown);
+  color: #fff;
+}
+
+.btn-bft:hover {
+  background-color: var(--bft-brown-dark);
+  border-color: var(--bft-brown-dark);
+  color: #fff;
+}
+
+.btn-outline-bft {
+  border-color: var(--bft-brown);
+  color: var(--bft-brown);
+}
+
+.btn-outline-bft:hover {
+  background-color: var(--bft-brown);
+  color: #fff;
+}
+
+/* Cards */
+.card {
+  border-color: #d2c4b0;
+}
+
+/* Footer */
+.footer {
+  background-color: var(--bft-brown-dark);
+  color: var(--bft-cream);
+  padding: 1rem 0;
+}
+
+.footer a {
+  color: var(--bft-tan);
+}
+
+.footer a:hover {
+  color: #fff;
+}
+
+/* Cart badge */
+.badge.bg-bft {
+  background-color: var(--bft-tan) !important;
+  color: var(--bft-brown-dark);
+}

@@ -1,0 +1,32 @@
+@page "{id:int}"
+@model BrownFlannelTavernStore.Pages.Admin.Products.DeleteModel
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+@if (Model.Product == null)
+{
+    <h2>Product not found.</h2>
+}
+else
+{
+    <h2>Delete Product</h2>
+    <div class="alert alert-warning">
+        Are you sure you want to delete <strong>@Model.Product.Name</strong>?
+        This will also remove all @Model.Product.Variants.Count variant(s).
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p><strong>Name:</strong> @Model.Product.Name</p>
+            <p><strong>Category:</strong> @Model.Product.Category</p>
+            <p><strong>Price:</strong> $@Model.Product.Price.ToString("F2")</p>
+        </div>
+    </div>
+
+    <form method="post">
+        <input type="hidden" asp-for="Product.Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-page="/Admin/Products/Index" class="btn btn-outline-bft ms-2">Cancel</a>
+    </form>
+}
