@@ -1,0 +1,19 @@
+[Unit]
+Description=Brown Flannel Tavern Store (.NET 9 Razor Pages)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+WorkingDirectory=/home/mrtcutler/published-apps/bft
+ExecStart=/usr/bin/dotnet /home/mrtcutler/published-apps/bft/BrownFlannelTavernStore.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=BrownFlannelTavern
+User=mrtcutler
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5001
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

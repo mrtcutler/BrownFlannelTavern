@@ -3,6 +3,7 @@
 
 # Local development settings (contains secrets)
 **/appsettings.Development.json
+**/appsettings.Production.json
 **/appsettings.Local.json
 **/appsettings.*.Local.json
 
