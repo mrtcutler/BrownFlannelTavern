@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BrownFlannelTavernStore.Tests/BrownFlannelTavernStore.Tests.csproj" />
+  <Project Path="BrownFlannelTavernStore/BrownFlannelTavernStore.csproj" />
+</Solution>

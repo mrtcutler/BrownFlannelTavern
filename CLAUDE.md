@@ -33,3 +33,26 @@ For sizing in `site.css`, prefer `rem` over `px`. Rem scales with the root font 
 - Box shadows when fractional rem reads awkwardly
 
 Conversion: `1rem` = whatever `html`'s font-size is. With a 16px base, `100px → 6.25rem`. The fractional values aren't ugly — they're exact.
+
+### Testing
+
+Tests are a default expectation, not an afterthought. The test project is `BrownFlannelTavernStore.Tests` (xUnit + Moq + FluentAssertions + EF Core InMemory). Folder structure mirrors the main project (`Tests/Services/`, `Tests/Pages/`, etc.).
+
+**Required tests:**
+- **Service classes** (`Services/*.cs`) — unit tests for all public methods.
+- **PageModel handlers** (`OnGet`, `OnPost`, `OnPostXxx`) with conditional logic — at least one test per branch.
+- **Bug fixes** — a regression test that fails before the fix and passes after.
+- **Refactors** — must keep all existing tests green; if behavior intentionally changes, update the affected tests in the same commit.
+
+**Don't bother testing:**
+- Razor views (`.cshtml` rendering) — fragile, slow, low value at this scale.
+- EF Core mappings or framework behavior — already tested by Microsoft.
+- Trivial getters/setters on plain models (test computed/derived properties only).
+
+**Conventions:**
+- Test class name = `<TypeUnderTest>Tests` (e.g., `CartServiceTests`).
+- Test method name = `MethodName_Scenario_ExpectedResult` (e.g., `AddToCart_NewItem_AppendsToCart`).
+- Prefer FluentAssertions (`actual.Should().Be(expected)`) over `Assert.Equal` for failure-message clarity.
+- Use `[Theory]` + `[InlineData]` for table-driven cases instead of multiple near-duplicate `[Fact]`s.
+
+Run tests from `C:\dev\bft\` with `dotnet test`. CI integration is planned but not yet set up — for now, run tests locally before committing.
