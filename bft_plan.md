@@ -49,7 +49,17 @@ End-to-end checkout flow with Stripe in test mode. Foundational because everythi
 - ✅ `LoggingEmailSender` decorator wraps `ResendEmailSender`; logs every send attempt (sent or failed) to `EmailLogs` table
 - ✅ DI: `ResendEmailSender` registered as concrete typed HTTP client; `IEmailSender` resolves to `LoggingEmailSender`
 - ✅ Admin Email Log viewer at `/Admin/EmailLog/Index` — shows latest 100 emails with status, links to related order
-- ✅ Unit tests: 10 total across `ResendEmailSenderTests` (6) and `LoggingEmailSenderTests` (4) — covers: missing config, successful send returns provider ID, failed send writes Failed log + rethrows, all metadata captured, CreatedAt is current UTC, optional fields nullable
+- ✅ Unit tests: 10 total across `ResendEmailSenderTests` (6) and `LoggingEmailSenderTests` (4)
+
+### Iteration 1.6 — Resend webhooks for true delivery status ✅ DONE
+Resolves the gap where `Sent` only meant "Resend accepted the request" — now reflects true async delivery outcomes.
+- ✅ Added `EmailStatus` values: `Delivered`, `Bounced`, `Complained` (alongside existing `Sent` / `Failed`)
+- ✅ Added `EmailLog.DeliveryUpdatedAt` for tracking when the latest webhook event fired
+- ✅ `ResendWebhookService` — verifies Svix-signed webhook payload (HMAC-SHA256 + 5-min timestamp tolerance for replay protection), parses event, looks up matching `EmailLog` by `ProviderMessageId`, updates status
+- ✅ Minimal API endpoint at `POST /api/resend/webhook` (mirrors Stripe webhook pattern)
+- ✅ Configuration: `Resend:WebhookSecret` (kept in `~/secrets/bft/appsettings.Production.json`)
+- ✅ Updated Email Log UI to render status with appropriate badge colors (Sent = secondary/transient, Delivered = green, Bounced/Complained/Failed = red); shows `DeliveryUpdatedAt`
+- ✅ Unit tests: 8 covering each event type, unknown email handling, signature verification, replay protection, missing-headers rejection
 
 ### Iteration 2 — Email templates 🔄 IN PROGRESS
 Build HTML + plain-text templates for transactional emails. Wired to triggers as each is built (collapsing original Phase 5 wiring into the same iterations for vertical slices).

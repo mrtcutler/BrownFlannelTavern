@@ -17,12 +17,13 @@ else
     <table class="table table-sm">
         <thead>
             <tr>
-                <th>When</th>
+                <th>Sent At</th>
                 <th>To</th>
                 <th>Type</th>
                 <th>Subject</th>
                 <th>Order</th>
                 <th>Status</th>
+                <th>Updated</th>
                 <th>Provider ID</th>
             </tr>
         </thead>
@@ -41,13 +42,29 @@ else
                         }
                     </td>
                     <td>
-                        @if (log.Status == EmailStatus.Sent)
+                        @switch (log.Status)
                         {
-                            <span class="badge bg-success">Sent</span>
+                            case EmailStatus.Delivered:
+                                <span class="badge bg-success">Delivered</span>
+                                break;
+                            case EmailStatus.Sent:
+                                <span class="badge bg-secondary" title="Accepted by Resend; awaiting delivery confirmation">Sent</span>
+                                break;
+                            case EmailStatus.Bounced:
+                                <span class="badge bg-danger" title="@log.ErrorMessage">Bounced</span>
+                                break;
+                            case EmailStatus.Complained:
+                                <span class="badge bg-danger" title="Recipient marked as spam">Complained</span>
+                                break;
+                            case EmailStatus.Failed:
+                                <span class="badge bg-danger" title="@log.ErrorMessage">Failed</span>
+                                break;
                         }
-                        else
+                    </td>
+                    <td>
+                        @if (log.DeliveryUpdatedAt.HasValue)
                         {
-                            <span class="badge bg-danger" title="@log.ErrorMessage">Failed</span>
+                            @log.DeliveryUpdatedAt.Value.ToString("MM/dd h:mm tt")
                         }
                     </td>
                     <td><code class="small">@log.ProviderMessageId</code></td>

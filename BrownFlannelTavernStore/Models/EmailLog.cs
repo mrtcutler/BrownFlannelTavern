@@ -36,6 +36,8 @@ public class EmailLog
     public string? ErrorMessage { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? DeliveryUpdatedAt { get; set; }
 }
 
 public enum EmailType
@@ -51,5 +53,8 @@ public enum EmailType
 public enum EmailStatus
 {
     Sent,
-    Failed
+    Failed,
+    Delivered,
+    Bounced,
+    Complained
 }

@@ -46,6 +46,7 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StripeWebhookService>();
 builder.Services.AddHttpClient<ResendEmailSender>();
 builder.Services.AddScoped<IEmailSender, LoggingEmailSender>();
+builder.Services.AddScoped<ResendWebhookService>();
 
 var app = builder.Build();
 
@@ -92,6 +93,31 @@ app.MapPost("/api/stripe/webhook", async (HttpContext context, StripeWebhookServ
     {
         logger.LogError(ex, "Stripe webhook signature verification failed");
         return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/resend/webhook", async (HttpContext context, ResendWebhookService service, ILogger<Program> logger) =>
+{
+    using var reader = new StreamReader(context.Request.Body);
+    var json = await reader.ReadToEndAsync();
+    var svixId = context.Request.Headers["svix-id"].ToString();
+    var svixTimestamp = context.Request.Headers["svix-timestamp"].ToString();
+    var svixSignature = context.Request.Headers["svix-signature"].ToString();
+
+    try
+    {
+        await service.HandleEventAsync(json, svixId, svixTimestamp, svixSignature);
+        return Results.Ok();
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        logger.LogWarning("Resend webhook rejected: {Message}", ex.Message);
+        return Results.Unauthorized();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Resend webhook handler error");
+        return Results.StatusCode(500);
     }
 });
 
