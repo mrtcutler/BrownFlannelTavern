@@ -1,0 +1,60 @@
+@page
+@model BrownFlannelTavernStore.Pages.Admin.EmailLog.IndexModel
+@using BrownFlannelTavernStore.Models
+@{
+    ViewData["Title"] = "Email Log";
+}
+
+<h2>Email Log</h2>
+<p class="text-muted">Most recent 100 emails (sent or attempted).</p>
+
+@if (!Model.EmailLogs.Any())
+{
+    <p>No emails logged yet.</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>When</th>
+                <th>To</th>
+                <th>Type</th>
+                <th>Subject</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Provider ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model.EmailLogs)
+            {
+                <tr>
+                    <td>@log.CreatedAt.ToString("MM/dd/yyyy h:mm tt")</td>
+                    <td>@log.ToAddress</td>
+                    <td>@log.EmailType</td>
+                    <td>@log.Subject</td>
+                    <td>
+                        @if (log.OrderId.HasValue)
+                        {
+                            <a asp-page="/Admin/Orders/Details" asp-route-id="@log.OrderId">#@log.OrderId</a>
+                        }
+                    </td>
+                    <td>
+                        @if (log.Status == EmailStatus.Sent)
+                        {
+                            <span class="badge bg-success">Sent</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger" title="@log.ErrorMessage">Failed</span>
+                        }
+                    </td>
+                    <td><code class="small">@log.ProviderMessageId</code></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-page="/Admin/Index" class="btn btn-outline-bft">Back to Dashboard</a>

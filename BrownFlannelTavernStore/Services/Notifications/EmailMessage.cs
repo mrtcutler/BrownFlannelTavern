@@ -1,7 +1,12 @@
+using BrownFlannelTavernStore.Models;
+
 namespace BrownFlannelTavernStore.Services.Notifications;
 
 public record EmailMessage(
     string To,
     string Subject,
     string HtmlBody,
-    string? TextBody = null);
+    EmailType EmailType,
+    string? TextBody = null,
+    int? OrderId = null,
+    string? UserId = null);

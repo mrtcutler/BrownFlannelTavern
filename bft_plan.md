@@ -38,11 +38,18 @@ End-to-end checkout flow with Stripe in test mode. Foundational because everythi
 
 ### Iteration 1 — Foundation ✅ DONE
 - ✅ `IEmailSender` interface + `ResendEmailSender` implementation calling Resend's REST API via `IHttpClientFactory` (no third-party SDK)
-- ✅ `EmailMessage` record DTO (To, Subject, HtmlBody, optional TextBody)
-- ✅ DI registration via `AddHttpClient<IEmailSender, ResendEmailSender>()`
+- ✅ `EmailMessage` record DTO (To, Subject, HtmlBody, EmailType, optional TextBody/OrderId/UserId)
 - ✅ Configuration: `Resend:ApiKey`, `Resend:FromAddress`, `Resend:FromName` (kept out of source — `~/secrets/bft/appsettings.Production.json` on the Pi)
 - ✅ Admin-only test page at `/Admin/SendTestEmail` for end-to-end integration verification
-- ✅ Unit tests (6 cases) covering: missing config throws, successful send completes, failed HTTP response throws with body, request payload is shaped correctly, optional FromName behavior
+
+### Iteration 1.5 — Email logging + audit ✅ DONE
+- ✅ `EmailLog` model + `EmailType` / `EmailStatus` enums; `DbSet<EmailLog>` on `StoreDbContext`
+- ✅ Stores full HTML and text bodies (≈30 MB/year worst case at BFT volume — negligible) so "resend confirmation" sends the *exact* original message, not a re-rendered template
+- ✅ `EmailSendResult` carries Resend's provider message ID for cross-reference
+- ✅ `LoggingEmailSender` decorator wraps `ResendEmailSender`; logs every send attempt (sent or failed) to `EmailLogs` table
+- ✅ DI: `ResendEmailSender` registered as concrete typed HTTP client; `IEmailSender` resolves to `LoggingEmailSender`
+- ✅ Admin Email Log viewer at `/Admin/EmailLog/Index` — shows latest 100 emails with status, links to related order
+- ✅ Unit tests: 10 total across `ResendEmailSenderTests` (6) and `LoggingEmailSenderTests` (4) — covers: missing config, successful send returns provider ID, failed send writes Failed log + rethrows, all metadata captured, CreatedAt is current UTC, optional fields nullable
 
 ### Iteration 2 — Email templates ⬜ TO DO
 Build HTML + plain-text templates for transactional emails. Triggers come in Phase 5.

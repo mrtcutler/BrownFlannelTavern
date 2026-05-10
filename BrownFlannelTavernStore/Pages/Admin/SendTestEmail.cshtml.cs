@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
 
 namespace BrownFlannelTavernStore.Pages.Admin;
@@ -49,6 +50,7 @@ public class SendTestEmailModel : PageModel
                 To: To,
                 Subject: Subject,
                 HtmlBody: $"<p>{Body}</p>",
+                EmailType: EmailType.TestEmail,
                 TextBody: Body));
             Message = $"Test email sent to {To}.";
         }

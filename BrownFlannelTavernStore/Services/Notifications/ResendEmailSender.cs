@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace BrownFlannelTavernStore.Services.Notifications;
 
@@ -16,7 +17,7 @@ public class ResendEmailSender : IEmailSender
         _logger = logger;
     }
 
-    public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+    public virtual async Task<EmailSendResult> SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
         var apiKey = _configuration["Resend:ApiKey"]
             ?? throw new InvalidOperationException("Resend:ApiKey is not configured.");
@@ -42,15 +43,23 @@ public class ResendEmailSender : IEmailSender
         request.Content = JsonContent.Create(payload);
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("Resend API rejected send: {Status} {Body}", response.StatusCode, body);
+            _logger.LogError("Resend API rejected send: {Status} {Body}", response.StatusCode, responseBody);
             throw new InvalidOperationException(
-                $"Failed to send email via Resend ({(int)response.StatusCode}): {body}");
+                $"Failed to send email via Resend ({(int)response.StatusCode}): {responseBody}");
         }
 
-        _logger.LogInformation("Sent email via Resend to {To} (subject: {Subject})", message.To, message.Subject);
+        var providerMessageId = JsonDocument.Parse(responseBody)
+            .RootElement
+            .GetProperty("id")
+            .GetString() ?? string.Empty;
+
+        _logger.LogInformation("Sent email via Resend to {To} (subject: {Subject}, id: {Id})",
+            message.To, message.Subject, providerMessageId);
+
+        return new EmailSendResult(providerMessageId);
     }
 }

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
@@ -31,7 +32,7 @@ public class ResendEmailSenderTests
     }
 
     private static EmailMessage SampleMessage() =>
-        new(To: "recipient@example.com", Subject: "Test", HtmlBody: "<p>Hello</p>", TextBody: "Hello");
+        new(To: "recipient@example.com", Subject: "Test", HtmlBody: "<p>Hello</p>", EmailType: EmailType.TestEmail, TextBody: "Hello");
 
     [Fact]
     public async Task SendAsync_ApiKeyMissing_Throws()
@@ -60,7 +61,7 @@ public class ResendEmailSenderTests
     }
 
     [Fact]
-    public async Task SendAsync_SuccessfulResponse_Completes()
+    public async Task SendAsync_SuccessfulResponse_ReturnsProviderMessageId()
     {
         var config = BuildConfig();
         var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
@@ -69,9 +70,9 @@ public class ResendEmailSenderTests
         });
         var sender = BuildSender(handler, config);
 
-        var act = () => sender.SendAsync(SampleMessage());
+        var result = await sender.SendAsync(SampleMessage());
 
-        await act.Should().NotThrowAsync();
+        result.ProviderMessageId.Should().Be("abc123");
     }
 
     [Fact]
@@ -95,13 +96,17 @@ public class ResendEmailSenderTests
     public async Task SendAsync_BuildsCorrectRequest()
     {
         var config = BuildConfig(apiKey: "re_secret_key", fromAddress: "noreply@example.com", fromName: "BFT Test");
-        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"id\":\"x\"}")
+        });
         var sender = BuildSender(handler, config);
 
         await sender.SendAsync(new EmailMessage(
             To: "customer@example.com",
             Subject: "Order #42",
             HtmlBody: "<h1>Thanks</h1>",
+            EmailType: EmailType.OrderConfirmation,
             TextBody: "Thanks"));
 
         handler.LastRequest.Should().NotBeNull();
@@ -122,7 +127,10 @@ public class ResendEmailSenderTests
     public async Task SendAsync_FromNameMissing_UsesBareAddress()
     {
         var config = BuildConfig(fromName: null);
-        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"id\":\"x\"}")
+        });
         var sender = BuildSender(handler, config);
 
         await sender.SendAsync(SampleMessage());

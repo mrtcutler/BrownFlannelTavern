@@ -12,6 +12,7 @@ public class StoreDbContext : IdentityDbContext
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
+    public DbSet<EmailLog> EmailLogs => Set<EmailLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

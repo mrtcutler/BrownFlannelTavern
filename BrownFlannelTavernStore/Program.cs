@@ -44,7 +44,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StripeWebhookService>();
-builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>();
+builder.Services.AddHttpClient<ResendEmailSender>();
+builder.Services.AddScoped<IEmailSender, LoggingEmailSender>();
 
 var app = builder.Build();
 
