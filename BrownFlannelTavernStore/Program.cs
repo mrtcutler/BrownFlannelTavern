@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Services;
+using BrownFlannelTavernStore.Services.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StripeWebhookService>();
+builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>();
 
 var app = builder.Build();
 

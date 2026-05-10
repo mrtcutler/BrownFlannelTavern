@@ -34,17 +34,26 @@ End-to-end checkout flow with Stripe in test mode. Foundational because everythi
 - **Customer contact capture at checkout**: email (required), phone (optional for now — required path for SMS notifications when Phase 8 ships)
 - Order data model additions: `FulfillmentMethod`, `ShippingAddress` (nullable), `Phone` (nullable), `NotificationPreference` (default: `Email`)
 
-## Phase 4: Email Service (Resend) ⬜ TO DO  *(FOUNDATION)*
-- Integrate **Resend** as the email provider (same as SpacedIn/SpacedOut — known-good in this stack)
-- Generic `INotificationService` abstraction with `EmailSender` implementation now and `SmsSender` slot reserved for Phase 8
-- Resend API key kept out of source — added to `~/secrets/bft/appsettings.Production.json` on the Pi
-- Email templates (transactional only for v1):
-  - Order confirmation
-  - Shipment / tracking notification
-  - Order status change
-  - Refund / cancellation confirmation
-  - Admin "new order placed" alert
-- Configuration via `appsettings.json` (sender name, from-address, reply-to)
+## Phase 4: Email Service (Resend) 🔄 IN PROGRESS  *(FOUNDATION)*
+
+### Iteration 1 — Foundation ✅ DONE
+- ✅ `IEmailSender` interface + `ResendEmailSender` implementation calling Resend's REST API via `IHttpClientFactory` (no third-party SDK)
+- ✅ `EmailMessage` record DTO (To, Subject, HtmlBody, optional TextBody)
+- ✅ DI registration via `AddHttpClient<IEmailSender, ResendEmailSender>()`
+- ✅ Configuration: `Resend:ApiKey`, `Resend:FromAddress`, `Resend:FromName` (kept out of source — `~/secrets/bft/appsettings.Production.json` on the Pi)
+- ✅ Admin-only test page at `/Admin/SendTestEmail` for end-to-end integration verification
+- ✅ Unit tests (6 cases) covering: missing config throws, successful send completes, failed HTTP response throws with body, request payload is shaped correctly, optional FromName behavior
+
+### Iteration 2 — Email templates ⬜ TO DO
+Build HTML + plain-text templates for transactional emails. Triggers come in Phase 5.
+- Order confirmation
+- Shipment / tracking notification
+- Order status change
+- Refund / cancellation confirmation
+- Admin "new order placed" alert
+
+### Note for Phase 8 (deferred)
+`ISmsSender` will be added as a sibling interface to `IEmailSender` when SMS unblocks. Higher-level orchestration (decide which channel based on `NotificationPreference`) belongs in Phase 5's notification triggers, not in Phase 4.
 
 ## Phase 5: Notifications & Customer Preferences ⬜ TO DO
 Built on top of Phases 3 & 4. Channel-agnostic so SMS plugs in cleanly when Phase 8 unblocks.
