@@ -7,6 +7,10 @@
 **/appsettings.Local.json
 **/appsettings.*.Local.json
 
+# Project planning / client-facing docs (kept local only)
+bft_plan.md
+client_requirements.md
+
 # .NET build output
 [Bb]in/
 [Oo]bj/

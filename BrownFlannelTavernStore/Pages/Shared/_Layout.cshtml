@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BrownFlannelTavernStore.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
         <nav class="navbar navbar-expand-sm navbar-dark navbar-bft border-bottom box-shadow mb-3">
             <img src="~/images/bft_logo.jpg" class="ms-2 img-fluid img-thumbnail" style="max-height: 4rem;" />
@@ -57,13 +57,13 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container flex-grow-1">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer">
+    <footer class="footer mt-auto">
         <div class="container">
             <span class="text-white">&copy; 2026 - Brown Flannel Tavern Store - </span><a asp-area="" asp-page="/Privacy">Privacy</a>
         </div>

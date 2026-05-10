@@ -18,21 +18,24 @@ public class Order
     [StringLength(200)]
     public string CustomerName { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(500)]
-    public string ShippingAddress { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(100)]
-    public string City { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    public string State { get; set; } = string.Empty;
-
-    [Required]
     [StringLength(20)]
-    public string ZipCode { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+
+    public FulfillmentMethod FulfillmentMethod { get; set; } = FulfillmentMethod.Shipped;
+
+    public NotificationPreference NotificationPreference { get; set; } = NotificationPreference.Email;
+
+    [StringLength(500)]
+    public string? ShippingAddress { get; set; }
+
+    [StringLength(100)]
+    public string? City { get; set; }
+
+    [StringLength(50)]
+    public string? State { get; set; }
+
+    [StringLength(20)]
+    public string? ZipCode { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal TotalAmount { get; set; }
@@ -80,4 +83,17 @@ public enum OrderStatus
     Shipped,
     Delivered,
     Cancelled
+}
+
+public enum FulfillmentMethod
+{
+    Shipped,
+    Pickup
+}
+
+public enum NotificationPreference
+{
+    Email,
+    Sms,
+    Both
 }

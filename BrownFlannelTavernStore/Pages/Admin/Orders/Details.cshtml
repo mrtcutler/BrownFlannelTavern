@@ -28,8 +28,25 @@ else
                 <div class="card-body">
                     <p><strong>Name:</strong> @Model.Order.CustomerName</p>
                     <p><strong>Email:</strong> @Model.Order.CustomerEmail</p>
-                    <p><strong>Address:</strong> @Model.Order.ShippingAddress</p>
-                    <p>@Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.Order.Phone))
+                    {
+                        <p><strong>Phone:</strong> @Model.Order.Phone</p>
+                    }
+                    <p><strong>Fulfillment:</strong>
+                        @if (Model.Order.FulfillmentMethod == FulfillmentMethod.Pickup)
+                        {
+                            <span class="badge bg-secondary">Pickup at store</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Ship to address</span>
+                        }
+                    </p>
+                    @if (Model.Order.FulfillmentMethod == FulfillmentMethod.Shipped)
+                    {
+                        <p><strong>Address:</strong> @Model.Order.ShippingAddress</p>
+                        <p>@Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+                    }
                 </div>
             </div>
         </div>

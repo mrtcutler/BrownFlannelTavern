@@ -1,5 +1,6 @@
 @page
 @model BrownFlannelTavernStore.Pages.Checkout.IndexModel
+@using BrownFlannelTavernStore.Models
 @{
     ViewData["Title"] = "Checkout";
 }
@@ -15,8 +16,29 @@ else
 {
     <div class="row">
         <div class="col-md-7">
-            <h4>Shipping Information</h4>
+            <h4>Fulfillment</h4>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <form method="post" id="payment-form">
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input fulfillment-radio" type="radio" name="FulfillmentMethod"
+                               id="fulfillment-shipped" value="Shipped"
+                               checked="@(Model.FulfillmentMethod == FulfillmentMethod.Shipped)" />
+                        <label class="form-check-label" for="fulfillment-shipped">
+                            Ship to my address
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input fulfillment-radio" type="radio" name="FulfillmentMethod"
+                               id="fulfillment-pickup" value="Pickup"
+                               checked="@(Model.FulfillmentMethod == FulfillmentMethod.Pickup)" />
+                        <label class="form-check-label" for="fulfillment-pickup">
+                            Pick up at the Brown Flannel Tavern
+                        </label>
+                    </div>
+                </div>
+
+                <h4>Contact Information</h4>
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
                     <input asp-for="CustomerName" class="form-control" required />
@@ -26,22 +48,42 @@ else
                     <input asp-for="CustomerEmail" type="email" class="form-control" required />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Address</label>
-                    <input asp-for="ShippingAddress" class="form-control" required />
+                    <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
+                    <input asp-for="Phone" type="tel" class="form-control" />
                 </div>
-                <div class="row">
-                    <div class="col-md-5 mb-3">
-                        <label class="form-label">City</label>
-                        <input asp-for="City" class="form-control" required />
+
+                <div id="shipping-section">
+                    <h4 class="mt-4">Shipping Address</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input asp-for="ShippingAddress" class="form-control" />
+                        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">State</label>
-                        <input asp-for="State" class="form-control" required />
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">City</label>
+                            <input asp-for="City" class="form-control" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">State</label>
+                            <input asp-for="State" class="form-control" />
+                            <span asp-validation-for="State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Zip Code</label>
+                            <input asp-for="ZipCode" class="form-control" />
+                            <span asp-validation-for="ZipCode" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Zip Code</label>
-                        <input asp-for="ZipCode" class="form-control" required />
-                    </div>
+                </div>
+
+                <div id="pickup-info" class="alert alert-info" style="display:none;">
+                    <strong>Pick up at the Brown Flannel Tavern</strong><br />
+                    175 S Venoy Rd, Westland, MI 48186<br />
+                    <small>Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</small>
+                    <hr class="my-2" />
+                    You will be notified when your order is ready for pickup.
                 </div>
 
                 <h4 class="mt-4">Payment</h4>
@@ -92,6 +134,24 @@ else
             const displayError = document.getElementById('card-errors');
             displayError.textContent = event.error ? event.error.message : '';
         });
+
+        const shippingSection = document.getElementById('shipping-section');
+        const pickupInfo = document.getElementById('pickup-info');
+        const fulfillmentRadios = document.querySelectorAll('.fulfillment-radio');
+
+        function updateFulfillmentVisibility() {
+            const selected = document.querySelector('.fulfillment-radio:checked').value;
+            if (selected === 'Pickup') {
+                shippingSection.style.display = 'none';
+                pickupInfo.style.display = 'block';
+            } else {
+                shippingSection.style.display = 'block';
+                pickupInfo.style.display = 'none';
+            }
+        }
+
+        fulfillmentRadios.forEach(radio => radio.addEventListener('change', updateFulfillmentVisibility));
+        updateFulfillmentVisibility();
 
         const form = document.getElementById('payment-form');
         form.addEventListener('submit', async function (event) {

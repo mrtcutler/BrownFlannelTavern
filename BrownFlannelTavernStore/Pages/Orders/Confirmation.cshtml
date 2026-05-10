@@ -1,5 +1,6 @@
 @page "{id:int}"
 @model BrownFlannelTavernStore.Pages.Orders.ConfirmationModel
+@using BrownFlannelTavernStore.Models
 @{
     ViewData["Title"] = "Order Confirmation";
 }
@@ -22,7 +23,22 @@ else
                     <h5>Order Details</h5>
                     <p><strong>Name:</strong> @Model.Order.CustomerName</p>
                     <p><strong>Email:</strong> @Model.Order.CustomerEmail</p>
-                    <p><strong>Shipping:</strong> @Model.Order.ShippingAddress, @Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.Order.Phone))
+                    {
+                        <p><strong>Phone:</strong> @Model.Order.Phone</p>
+                    }
+                    @if (Model.Order.FulfillmentMethod == FulfillmentMethod.Pickup)
+                    {
+                        <p>
+                            <strong>Pickup:</strong> Brown Flannel Tavern, 175 S Venoy Rd, Westland, MI 48186<br />
+                            <small class="text-muted">Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</small><br />
+                            You'll be notified when your order is ready.
+                        </p>
+                    }
+                    else
+                    {
+                        <p><strong>Shipping:</strong> @Model.Order.ShippingAddress, @Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+                    }
 
                     <table class="table mt-3">
                         <thead>

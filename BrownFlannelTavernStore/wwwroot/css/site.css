@@ -20,13 +20,7 @@ html {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--bft-tan);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
   background-color: var(--bft-cream);
   color: #2c2c2c;
 }

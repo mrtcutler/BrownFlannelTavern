@@ -37,16 +37,22 @@ public class IndexModel : PageModel
     public string CustomerEmail { get; set; } = string.Empty;
 
     [BindProperty]
-    public string ShippingAddress { get; set; } = string.Empty;
+    public string? Phone { get; set; }
 
     [BindProperty]
-    public string City { get; set; } = string.Empty;
+    public FulfillmentMethod FulfillmentMethod { get; set; } = FulfillmentMethod.Shipped;
 
     [BindProperty]
-    public string State { get; set; } = string.Empty;
+    public string? ShippingAddress { get; set; }
 
     [BindProperty]
-    public string ZipCode { get; set; } = string.Empty;
+    public string? City { get; set; }
+
+    [BindProperty]
+    public string? State { get; set; }
+
+    [BindProperty]
+    public string? ZipCode { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -71,7 +77,26 @@ public class IndexModel : PageModel
         if (!CartItems.Any())
             return RedirectToPage("/Cart/Index");
 
-        // Verify payment with Stripe
+        if (FulfillmentMethod == FulfillmentMethod.Shipped)
+        {
+            if (string.IsNullOrWhiteSpace(ShippingAddress))
+                ModelState.AddModelError(nameof(ShippingAddress), "Shipping address is required.");
+            if (string.IsNullOrWhiteSpace(City))
+                ModelState.AddModelError(nameof(City), "City is required.");
+            if (string.IsNullOrWhiteSpace(State))
+                ModelState.AddModelError(nameof(State), "State is required.");
+            if (string.IsNullOrWhiteSpace(ZipCode))
+                ModelState.AddModelError(nameof(ZipCode), "Zip code is required.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            var freshIntent = await _paymentService.CreatePaymentIntentAsync(Total);
+            ClientSecret = freshIntent.ClientSecret;
+            PaymentIntentId = freshIntent.Id;
+            return Page();
+        }
+
         var paymentIntent = await _paymentService.GetPaymentIntentAsync(PaymentIntentId);
 
         if (paymentIntent.Status != "succeeded")
@@ -79,16 +104,18 @@ public class IndexModel : PageModel
             return RedirectToPage("/Checkout/Index");
         }
 
-        // Create the order
         var order = new Order
         {
             StripePaymentIntentId = PaymentIntentId,
             CustomerEmail = CustomerEmail,
             CustomerName = CustomerName,
-            ShippingAddress = ShippingAddress,
-            City = City,
-            State = State,
-            ZipCode = ZipCode,
+            Phone = Phone,
+            FulfillmentMethod = FulfillmentMethod,
+            NotificationPreference = NotificationPreference.Email,
+            ShippingAddress = FulfillmentMethod == FulfillmentMethod.Shipped ? ShippingAddress : null,
+            City = FulfillmentMethod == FulfillmentMethod.Shipped ? City : null,
+            State = FulfillmentMethod == FulfillmentMethod.Shipped ? State : null,
+            ZipCode = FulfillmentMethod == FulfillmentMethod.Shipped ? ZipCode : null,
             TotalAmount = Total,
             Status = OrderStatus.Paid,
             Lines = CartItems.Select(item => new OrderLine
