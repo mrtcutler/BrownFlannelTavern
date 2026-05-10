@@ -42,6 +42,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<StripeWebhookService>();
 
 var app = builder.Build();
 
@@ -72,5 +73,23 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
+
+app.MapPost("/api/stripe/webhook", async (HttpContext context, StripeWebhookService service, ILogger<Program> logger) =>
+{
+    using var reader = new StreamReader(context.Request.Body);
+    var json = await reader.ReadToEndAsync();
+    var signature = context.Request.Headers["Stripe-Signature"].ToString();
+
+    try
+    {
+        await service.HandleEventAsync(json, signature);
+        return Results.Ok();
+    }
+    catch (Stripe.StripeException ex)
+    {
+        logger.LogError(ex, "Stripe webhook signature verification failed");
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
 
 app.Run();

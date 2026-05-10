@@ -104,6 +104,17 @@ public class IndexModel : PageModel
             return RedirectToPage("/Checkout/Index");
         }
 
+        var expectedAmountInCents = (long)(Total * 100);
+        if (paymentIntent.Amount != expectedAmountInCents)
+        {
+            ModelState.AddModelError(string.Empty,
+                "Cart total has changed since payment was authorized. Please review your cart and try again.");
+            var freshIntent = await _paymentService.CreatePaymentIntentAsync(Total);
+            ClientSecret = freshIntent.ClientSecret;
+            PaymentIntentId = freshIntent.Id;
+            return Page();
+        }
+
         var order = new Order
         {
             StripePaymentIntentId = PaymentIntentId,
