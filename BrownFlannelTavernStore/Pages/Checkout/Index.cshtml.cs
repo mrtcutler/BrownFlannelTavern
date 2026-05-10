@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services;
+using BrownFlannelTavernStore.Services.Notifications;
+using BrownFlannelTavernStore.Services.Notifications.Emails;
 
 namespace BrownFlannelTavernStore.Pages.Checkout;
 
@@ -12,14 +14,19 @@ public class IndexModel : PageModel
     private readonly PaymentService _paymentService;
     private readonly StoreDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IEmailSender _emailSender;
+    private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(CartService cartService, PaymentService paymentService,
-        StoreDbContext context, IConfiguration configuration)
+        StoreDbContext context, IConfiguration configuration,
+        IEmailSender emailSender, ILogger<IndexModel> logger)
     {
         _cartService = cartService;
         _paymentService = paymentService;
         _context = context;
         _configuration = configuration;
+        _emailSender = emailSender;
+        _logger = logger;
     }
 
     public List<CartItem> CartItems { get; set; } = [];
@@ -143,6 +150,15 @@ public class IndexModel : PageModel
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
+
+        try
+        {
+            await _emailSender.SendAsync(OrderConfirmationEmail.Build(order));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send order confirmation email for order {OrderId}", order.Id);
+        }
 
         _cartService.ClearCart();
 

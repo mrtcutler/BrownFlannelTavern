@@ -51,13 +51,13 @@ End-to-end checkout flow with Stripe in test mode. Foundational because everythi
 - ✅ Admin Email Log viewer at `/Admin/EmailLog/Index` — shows latest 100 emails with status, links to related order
 - ✅ Unit tests: 10 total across `ResendEmailSenderTests` (6) and `LoggingEmailSenderTests` (4) — covers: missing config, successful send returns provider ID, failed send writes Failed log + rethrows, all metadata captured, CreatedAt is current UTC, optional fields nullable
 
-### Iteration 2 — Email templates ⬜ TO DO
-Build HTML + plain-text templates for transactional emails. Triggers come in Phase 5.
-- Order confirmation
-- Shipment / tracking notification
-- Order status change
-- Refund / cancellation confirmation
-- Admin "new order placed" alert
+### Iteration 2 — Email templates 🔄 IN PROGRESS
+Build HTML + plain-text templates for transactional emails. Wired to triggers as each is built (collapsing original Phase 5 wiring into the same iterations for vertical slices).
+- ✅ **Order confirmation** — `OrderConfirmationEmail.Build(Order)` static builder; HTML + plain-text bodies; HTML-encoded customer name/variants for safety; conditional pickup vs shipping section. Wired into `Checkout/Index.cshtml.cs OnPostAsync` after `SaveChangesAsync`. Email send is best-effort: failure is logged but does NOT roll back the order. 8 unit tests covering metadata, content, conditional fulfillment, HTML encoding.
+- ⬜ Shipment / tracking notification (Phase 6 — fulfillment workflow)
+- ⬜ Order status change
+- ⬜ Refund / cancellation confirmation (Phase 7)
+- ⬜ Admin "new order placed" alert
 
 ### Note for Phase 8 (deferred)
 `ISmsSender` will be added as a sibling interface to `IEmailSender` when SMS unblocks. Higher-level orchestration (decide which channel based on `NotificationPreference`) belongs in Phase 5's notification triggers, not in Phase 4.
