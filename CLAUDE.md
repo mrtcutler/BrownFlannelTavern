@@ -16,8 +16,20 @@ Avoid inline `style="..."` attributes on HTML elements. When styling, follow thi
 
 **Why:** Inline styles fragment styling across files, can't be cleanly overridden without `!important`, and make theme changes painful (e.g., the bft brown/cream palette lives in CSS variables in `site.css` — inline styles bypass it). Centralizing in `site.css` keeps styles discoverable and reusable.
 
-**Existing inline styles in the codebase pre-date this rule.** Don't go on a sweeping cleanup pass, but when you're already editing a file, prefer to extract any inline styles you touch into utility classes or `site.css`.
+**JS-driven visibility toggles:** also use classes, not inline styles. Toggle Bootstrap's `d-none` via `element.classList.add/remove('d-none')` instead of setting `element.style.display`. Removing the class lets the element return to whatever display the cascade says it should have (block, flex, grid, etc.) — more robust than locking in `display: block`.
 
-**Reasonable exceptions** (don't refactor these into CSS classes):
-- Values toggled by JavaScript at runtime (e.g., `style="display:none;"` on an element shown/hidden by a script).
-- Genuinely per-instance dynamic values (e.g., a progress bar's `style="width: @percent%"`).
+**Reasonable exception:** genuinely per-instance dynamic values where a class can't carry the data (e.g., a progress bar's `style="width: @percent%"`, a colored badge whose hex comes from data). These are rare; default to a class.
+
+### CSS units: prefer `rem`
+
+For sizing in `site.css`, prefer `rem` over `px`. Rem scales with the root font size, which respects user accessibility settings (browser default font size, zoom) — px doesn't.
+
+**Use `rem` for:** widths, heights, padding, margin, font sizes, border-radius.
+**Use `em` when** you want the value to scale with the *local* font size (e.g., a button's internal padding tracking its own text size).
+**Keep `px` for:**
+- The base `html { font-size: ... }` declaration (this is the rem reference itself)
+- Media query breakpoints (Bootstrap convention)
+- 1px hairline borders (`border: 1px solid ...`) — rem can cause subpixel fuzziness
+- Box shadows when fractional rem reads awkwardly
+
+Conversion: `1rem` = whatever `html`'s font-size is. With a 16px base, `100px → 6.25rem`. The fractional values aren't ugly — they're exact.

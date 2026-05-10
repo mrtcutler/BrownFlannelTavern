@@ -78,7 +78,7 @@ else
                     </div>
                 </div>
 
-                <div id="pickup-info" class="alert alert-info" style="display:none;">
+                <div id="pickup-info" class="alert alert-info d-none">
                     <strong>Pick up at the Brown Flannel Tavern</strong><br />
                     175 S Venoy Rd, Westland, MI 48186<br />
                     <small>Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</small>
@@ -87,7 +87,7 @@ else
                 </div>
 
                 <h4 class="mt-4">Payment</h4>
-                <div id="card-element" class="form-control mb-3" style="padding-top: 10px;">
+                <div id="card-element" class="form-control mb-3 pt-2">
                     <!-- Stripe Elements will mount here -->
                 </div>
                 <div id="card-errors" class="text-danger mb-3" role="alert"></div>
@@ -142,11 +142,11 @@ else
         function updateFulfillmentVisibility() {
             const selected = document.querySelector('.fulfillment-radio:checked').value;
             if (selected === 'Pickup') {
-                shippingSection.style.display = 'none';
-                pickupInfo.style.display = 'block';
+                shippingSection.classList.add('d-none');
+                pickupInfo.classList.remove('d-none');
             } else {
-                shippingSection.style.display = 'block';
-                pickupInfo.style.display = 'none';
+                shippingSection.classList.remove('d-none');
+                pickupInfo.classList.add('d-none');
             }
         }
 

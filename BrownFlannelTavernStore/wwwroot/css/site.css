@@ -105,3 +105,23 @@ body {
   background-color: var(--bft-tan) !important;
   color: var(--bft-brown-dark);
 }
+
+/* Logo in navbar */
+.navbar-logo {
+  max-height: 4rem;
+}
+
+/* Product card image (catalog/home) */
+.product-thumbnail {
+  height: 15.625rem;
+  object-fit: cover;
+}
+
+/* Quantity inputs */
+.qty-input {
+  width: 6.25rem;
+}
+
+.qty-input-sm {
+  width: 4.375rem;
+}
