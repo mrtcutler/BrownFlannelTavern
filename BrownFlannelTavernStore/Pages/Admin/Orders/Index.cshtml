@@ -15,11 +15,11 @@
         RouteData = Model.BuildRouteData()
     };
 
-    var idHeader = Sortable("id", "Order #");
-    var customerHeader = Sortable("customer", "Customer");
-    var totalHeader = Sortable("total", "Total");
-    var statusHeader = Sortable("status", "Status");
-    var dateHeader = Sortable("date", "Date");
+    var idHeader = Sortable(OrdersSortKeys.Id, "Order #");
+    var customerHeader = Sortable(OrdersSortKeys.Customer, "Customer");
+    var totalHeader = Sortable(OrdersSortKeys.Total, "Total");
+    var statusHeader = Sortable(OrdersSortKeys.Status, "Status");
+    var dateHeader = Sortable(OrdersSortKeys.Date, "Date");
 }
 
 <h2>Manage Orders</h2>

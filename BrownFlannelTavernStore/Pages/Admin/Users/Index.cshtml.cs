@@ -7,7 +7,13 @@ using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Users;
 
-[Authorize(Roles = "Owner")]
+public static class UsersSortKeys
+{
+    public const string Email = "email";
+    public const string Role = "role";
+}
+
+[Authorize(Roles = SeedData.OwnerRole)]
 public class IndexModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;
@@ -64,9 +70,9 @@ public class IndexModel : PageModel
 
         allUsers = (SortBy?.ToLowerInvariant(), SortDir?.ToLowerInvariant()) switch
         {
-            ("role", "asc") => allUsers.OrderBy(u => u.Role),
-            ("role", _) => allUsers.OrderByDescending(u => u.Role),
-            ("email", "desc") => allUsers.OrderByDescending(u => u.Email),
+            (UsersSortKeys.Role, SortDirection.Ascending) => allUsers.OrderBy(u => u.Role),
+            (UsersSortKeys.Role, _) => allUsers.OrderByDescending(u => u.Role),
+            (UsersSortKeys.Email, SortDirection.Descending) => allUsers.OrderByDescending(u => u.Email),
             _ => allUsers.OrderBy(u => u.Email)
         };
 

@@ -8,7 +8,15 @@ using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Products;
 
-[Authorize(Roles = "Owner")]
+public static class ProductsSortKeys
+{
+    public const string Id = "id";
+    public const string Name = "name";
+    public const string Category = "category";
+    public const string Price = "price";
+}
+
+[Authorize(Roles = SeedData.OwnerRole)]
 public class IndexModel : PageModel
 {
     private readonly StoreDbContext _context;
@@ -54,13 +62,13 @@ public class IndexModel : PageModel
 
         query = (SortBy?.ToLowerInvariant(), SortDir?.ToLowerInvariant()) switch
         {
-            ("id", "asc") => query.OrderBy(p => p.Id),
-            ("id", _) => query.OrderByDescending(p => p.Id),
-            ("category", "asc") => query.OrderBy(p => p.Category),
-            ("category", _) => query.OrderByDescending(p => p.Category),
-            ("price", "asc") => query.OrderBy(p => p.Price),
-            ("price", _) => query.OrderByDescending(p => p.Price),
-            ("name", "desc") => query.OrderByDescending(p => p.Name),
+            (ProductsSortKeys.Id, SortDirection.Ascending) => query.OrderBy(p => p.Id),
+            (ProductsSortKeys.Id, _) => query.OrderByDescending(p => p.Id),
+            (ProductsSortKeys.Category, SortDirection.Ascending) => query.OrderBy(p => p.Category),
+            (ProductsSortKeys.Category, _) => query.OrderByDescending(p => p.Category),
+            (ProductsSortKeys.Price, SortDirection.Ascending) => query.OrderBy(p => p.Price),
+            (ProductsSortKeys.Price, _) => query.OrderByDescending(p => p.Price),
+            (ProductsSortKeys.Name, SortDirection.Descending) => query.OrderByDescending(p => p.Name),
             _ => query.OrderBy(p => p.Name)
         };
 

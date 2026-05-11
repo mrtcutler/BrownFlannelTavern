@@ -7,7 +7,17 @@ using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.EmailLog;
 
-[Authorize(Roles = "Owner,Manager")]
+public static class EmailLogSortKeys
+{
+    public const string Date = "date";
+    public const string Recipient = "recipient";
+    public const string Type = "type";
+    public const string Subject = "subject";
+    public const string Status = "status";
+    public const string Updated = "updated";
+}
+
+[Authorize(Roles = SeedData.OwnerOrManagerRoles)]
 public class IndexModel : PageModel
 {
     private const int EmailLogPageSize = 50;
@@ -63,17 +73,17 @@ public class IndexModel : PageModel
 
         query = (SortBy?.ToLowerInvariant(), SortDir?.ToLowerInvariant()) switch
         {
-            ("recipient", "asc") => query.OrderBy(e => e.ToAddress),
-            ("recipient", _) => query.OrderByDescending(e => e.ToAddress),
-            ("type", "asc") => query.OrderBy(e => e.EmailType),
-            ("type", _) => query.OrderByDescending(e => e.EmailType),
-            ("subject", "asc") => query.OrderBy(e => e.Subject),
-            ("subject", _) => query.OrderByDescending(e => e.Subject),
-            ("status", "asc") => query.OrderBy(e => e.Status),
-            ("status", _) => query.OrderByDescending(e => e.Status),
-            ("updated", "asc") => query.OrderBy(e => e.DeliveryUpdatedAt),
-            ("updated", _) => query.OrderByDescending(e => e.DeliveryUpdatedAt),
-            ("date", "asc") => query.OrderBy(e => e.CreatedAt),
+            (EmailLogSortKeys.Recipient, SortDirection.Ascending) => query.OrderBy(e => e.ToAddress),
+            (EmailLogSortKeys.Recipient, _) => query.OrderByDescending(e => e.ToAddress),
+            (EmailLogSortKeys.Type, SortDirection.Ascending) => query.OrderBy(e => e.EmailType),
+            (EmailLogSortKeys.Type, _) => query.OrderByDescending(e => e.EmailType),
+            (EmailLogSortKeys.Subject, SortDirection.Ascending) => query.OrderBy(e => e.Subject),
+            (EmailLogSortKeys.Subject, _) => query.OrderByDescending(e => e.Subject),
+            (EmailLogSortKeys.Status, SortDirection.Ascending) => query.OrderBy(e => e.Status),
+            (EmailLogSortKeys.Status, _) => query.OrderByDescending(e => e.Status),
+            (EmailLogSortKeys.Updated, SortDirection.Ascending) => query.OrderBy(e => e.DeliveryUpdatedAt),
+            (EmailLogSortKeys.Updated, _) => query.OrderByDescending(e => e.DeliveryUpdatedAt),
+            (EmailLogSortKeys.Date, SortDirection.Ascending) => query.OrderBy(e => e.CreatedAt),
             _ => query.OrderByDescending(e => e.CreatedAt)
         };
 

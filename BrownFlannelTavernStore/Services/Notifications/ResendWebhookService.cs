@@ -72,9 +72,9 @@ public class ResendWebhookService
 
     private static EmailStatus? MapEventToStatus(string eventType) => eventType switch
     {
-        "email.delivered" => EmailStatus.Delivered,
-        "email.bounced" => EmailStatus.Bounced,
-        "email.complained" => EmailStatus.Complained,
+        ResendEventTypes.EmailDelivered => EmailStatus.Delivered,
+        ResendEventTypes.EmailBounced => EmailStatus.Bounced,
+        ResendEventTypes.EmailComplained => EmailStatus.Complained,
         _ => null
     };
 

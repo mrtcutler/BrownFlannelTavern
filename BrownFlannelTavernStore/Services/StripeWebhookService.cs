@@ -29,7 +29,7 @@ public class StripeWebhookService
 
         switch (stripeEvent.Type)
         {
-            case "payment_intent.succeeded":
+            case StripeEventTypes.PaymentIntentSucceeded:
                 await HandlePaymentIntentSucceededAsync((PaymentIntent)stripeEvent.Data.Object);
                 break;
             default:

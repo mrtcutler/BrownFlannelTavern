@@ -9,7 +9,7 @@ using BrownFlannelTavernStore.Services.Notifications.Emails;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Orders;
 
-[Authorize(Roles = "Owner,Manager")]
+[Authorize(Roles = SeedData.OwnerOrManagerRoles)]
 public class DetailsModel : PageModel
 {
     private readonly StoreDbContext _context;

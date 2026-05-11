@@ -11,20 +11,20 @@ public class SortableHeaderViewModel
 
     public bool IsActive => string.Equals(CurrentSort, ColumnKey, StringComparison.OrdinalIgnoreCase);
 
-    public string NewDirection => IsActive && string.Equals(CurrentDir, "asc", StringComparison.OrdinalIgnoreCase)
-        ? "desc"
-        : "asc";
+    public string NewDirection => IsActive && string.Equals(CurrentDir, SortDirection.Ascending, StringComparison.OrdinalIgnoreCase)
+        ? SortDirection.Descending
+        : SortDirection.Ascending;
 
     public string Arrow => IsActive
-        ? (string.Equals(CurrentDir, "desc", StringComparison.OrdinalIgnoreCase) ? " ▼" : " ▲")
+        ? (string.Equals(CurrentDir, SortDirection.Descending, StringComparison.OrdinalIgnoreCase) ? " ▼" : " ▲")
         : "";
 
     public Dictionary<string, string?> SortRouteData()
     {
         var copy = new Dictionary<string, string?>(RouteData)
         {
-            ["sortBy"] = ColumnKey,
-            ["sortDir"] = NewDirection,
+            ["SortBy"] = ColumnKey,
+            ["SortDir"] = NewDirection,
             ["page"] = null
         };
         return copy;

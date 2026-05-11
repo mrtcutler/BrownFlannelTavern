@@ -105,8 +105,8 @@ public class SortableHeaderViewModelTests
 
         var data = vm.SortRouteData();
 
-        data["sortBy"].Should().Be("total");
-        data["sortDir"].Should().Be("asc");
+        data["SortBy"].Should().Be("total");
+        data["SortDir"].Should().Be("asc");
         data["page"].Should().BeNull();
         data["status"].Should().Be("Paid");
     }

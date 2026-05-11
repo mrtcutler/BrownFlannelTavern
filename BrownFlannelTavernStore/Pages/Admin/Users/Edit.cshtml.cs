@@ -6,7 +6,7 @@ using BrownFlannelTavernStore.Data;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Users;
 
-[Authorize(Roles = "Owner")]
+[Authorize(Roles = SeedData.OwnerRole)]
 public class EditModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;

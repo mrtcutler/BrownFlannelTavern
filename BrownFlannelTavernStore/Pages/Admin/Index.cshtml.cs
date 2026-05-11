@@ -7,7 +7,7 @@ using BrownFlannelTavernStore.Models;
 
 namespace BrownFlannelTavernStore.Pages.Admin;
 
-[Authorize(Roles = "Owner,Manager")]
+[Authorize(Roles = SeedData.OwnerOrManagerRoles)]
 public class IndexModel : PageModel
 {
     private readonly StoreDbContext _context;

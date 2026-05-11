@@ -15,12 +15,12 @@
         RouteData = Model.BuildRouteData()
     };
 
-    var dateHeader = Sortable("date", "Sent At");
-    var recipientHeader = Sortable("recipient", "To");
-    var typeHeader = Sortable("type", "Type");
-    var subjectHeader = Sortable("subject", "Subject");
-    var statusHeader = Sortable("status", "Status");
-    var updatedHeader = Sortable("updated", "Updated");
+    var dateHeader = Sortable(EmailLogSortKeys.Date, "Sent At");
+    var recipientHeader = Sortable(EmailLogSortKeys.Recipient, "To");
+    var typeHeader = Sortable(EmailLogSortKeys.Type, "Type");
+    var subjectHeader = Sortable(EmailLogSortKeys.Subject, "Subject");
+    var statusHeader = Sortable(EmailLogSortKeys.Status, "Status");
+    var updatedHeader = Sortable(EmailLogSortKeys.Updated, "Updated");
 }
 
 <h2>Email Log</h2>

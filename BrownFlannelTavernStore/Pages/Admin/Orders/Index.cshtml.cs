@@ -7,7 +7,16 @@ using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Orders;
 
-[Authorize(Roles = "Owner,Manager")]
+public static class OrdersSortKeys
+{
+    public const string Id = "id";
+    public const string Customer = "customer";
+    public const string Total = "total";
+    public const string Status = "status";
+    public const string Date = "date";
+}
+
+[Authorize(Roles = SeedData.OwnerOrManagerRoles)]
 public class IndexModel : PageModel
 {
     private readonly StoreDbContext _context;
@@ -61,15 +70,15 @@ public class IndexModel : PageModel
 
         query = (SortBy?.ToLowerInvariant(), SortDir?.ToLowerInvariant()) switch
         {
-            ("id", "asc") => query.OrderBy(o => o.Id),
-            ("id", _) => query.OrderByDescending(o => o.Id),
-            ("customer", "asc") => query.OrderBy(o => o.CustomerName),
-            ("customer", _) => query.OrderByDescending(o => o.CustomerName),
-            ("total", "asc") => query.OrderBy(o => o.TotalAmount),
-            ("total", _) => query.OrderByDescending(o => o.TotalAmount),
-            ("status", "asc") => query.OrderBy(o => o.Status),
-            ("status", _) => query.OrderByDescending(o => o.Status),
-            ("date", "asc") => query.OrderBy(o => o.CreatedAt),
+            (OrdersSortKeys.Id, SortDirection.Ascending) => query.OrderBy(o => o.Id),
+            (OrdersSortKeys.Id, _) => query.OrderByDescending(o => o.Id),
+            (OrdersSortKeys.Customer, SortDirection.Ascending) => query.OrderBy(o => o.CustomerName),
+            (OrdersSortKeys.Customer, _) => query.OrderByDescending(o => o.CustomerName),
+            (OrdersSortKeys.Total, SortDirection.Ascending) => query.OrderBy(o => o.TotalAmount),
+            (OrdersSortKeys.Total, _) => query.OrderByDescending(o => o.TotalAmount),
+            (OrdersSortKeys.Status, SortDirection.Ascending) => query.OrderBy(o => o.Status),
+            (OrdersSortKeys.Status, _) => query.OrderByDescending(o => o.Status),
+            (OrdersSortKeys.Date, SortDirection.Ascending) => query.OrderBy(o => o.CreatedAt),
             _ => query.OrderByDescending(o => o.CreatedAt)
         };
 

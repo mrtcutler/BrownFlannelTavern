@@ -14,10 +14,10 @@
         RouteData = Model.BuildRouteData()
     };
 
-    var idHeader = Sortable("id", "ID");
-    var nameHeader = Sortable("name", "Name");
-    var categoryHeader = Sortable("category", "Category");
-    var priceHeader = Sortable("price", "Price");
+    var idHeader = Sortable(ProductsSortKeys.Id, "ID");
+    var nameHeader = Sortable(ProductsSortKeys.Name, "Name");
+    var categoryHeader = Sortable(ProductsSortKeys.Category, "Category");
+    var priceHeader = Sortable(ProductsSortKeys.Price, "Price");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">

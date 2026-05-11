@@ -6,6 +6,7 @@ public static class SeedData
 {
     public const string OwnerRole = "Owner";
     public const string ManagerRole = "Manager";
+    public const string OwnerOrManagerRoles = $"{OwnerRole},{ManagerRole}";
 
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {

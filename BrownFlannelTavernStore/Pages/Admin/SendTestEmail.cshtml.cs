@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
 
 namespace BrownFlannelTavernStore.Pages.Admin;
 
-[Authorize(Roles = "Owner,Manager")]
+[Authorize(Roles = SeedData.OwnerOrManagerRoles)]
 public class SendTestEmailModel : PageModel
 {
     private readonly IEmailSender _emailSender;

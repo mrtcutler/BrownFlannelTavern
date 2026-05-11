@@ -6,7 +6,7 @@ using BrownFlannelTavernStore.Models;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Products;
 
-[Authorize(Roles = "Owner")]
+[Authorize(Roles = SeedData.OwnerRole)]
 public class CreateModel : PageModel
 {
     private readonly StoreDbContext _context;
