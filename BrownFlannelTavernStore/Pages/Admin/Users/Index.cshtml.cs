@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BrownFlannelTavernStore.Data;
+using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Users;
 
@@ -16,13 +17,14 @@ public class IndexModel : PageModel
         _userManager = userManager;
     }
 
-    public List<AdminUserViewModel> AdminUsers { get; set; } = [];
+    public PagedList<AdminUserViewModel> AdminUsers { get; set; } = new(Array.Empty<AdminUserViewModel>(), 1, PagedListExtensions.DefaultPageSize, 0);
     public string? Message { get; set; }
+    public PaginationViewModel Pagination { get; set; } = null!;
 
-    public async Task OnGetAsync(string? message = null)
+    public async Task OnGetAsync(string? message = null, int page = 1)
     {
         Message = message;
-        await LoadUsers();
+        await LoadUsers(page);
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(string userId)
@@ -36,16 +38,19 @@ public class IndexModel : PageModel
         return RedirectToPage(new { message = "User deleted." });
     }
 
-    private async Task LoadUsers()
+    private async Task LoadUsers(int page)
     {
         var owners = await _userManager.GetUsersInRoleAsync(SeedData.OwnerRole);
         var managers = await _userManager.GetUsersInRoleAsync(SeedData.ManagerRole);
 
-        AdminUsers = owners.Select(u => new AdminUserViewModel
+        var allUsers = owners.Select(u => new AdminUserViewModel
             { Id = u.Id, Email = u.Email!, Role = SeedData.OwnerRole })
             .Concat(managers.Select(u => new AdminUserViewModel
             { Id = u.Id, Email = u.Email!, Role = SeedData.ManagerRole }))
-            .ToList();
+            .OrderBy(u => u.Email);
+
+        AdminUsers = allUsers.ToPagedList(page);
+        Pagination = PaginationViewModel.From(AdminUsers, "/Admin/Users/Index");
     }
 }
 

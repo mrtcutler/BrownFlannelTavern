@@ -6,9 +6,9 @@
 }
 
 <h2>Email Log</h2>
-<p class="text-muted">Most recent 100 emails (sent or attempted).</p>
+<p class="text-muted">Email send history (most recent first).</p>
 
-@if (!Model.EmailLogs.Any())
+@if (Model.EmailLogs.TotalCount == 0)
 {
     <p>No emails logged yet.</p>
 }
@@ -28,7 +28,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var log in Model.EmailLogs)
+            @foreach (var log in Model.EmailLogs.Items)
             {
                 <tr>
                     <td>@log.CreatedAt.ToString("MM/dd/yyyy h:mm tt")</td>
@@ -72,6 +72,8 @@ else
             }
         </tbody>
     </table>
+
+    <partial name="_Pagination" model="@Model.Pagination" />
 }
 
-<a asp-page="/Admin/Index" class="btn btn-outline-bft">Back to Dashboard</a>
+<a asp-page="/Admin/Index" class="btn btn-outline-bft mt-3">Back to Dashboard</a>

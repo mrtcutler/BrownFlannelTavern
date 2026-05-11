@@ -1,0 +1,36 @@
+@model BrownFlannelTavernStore.Utilities.PaginationViewModel
+
+@if (Model.TotalCount > 0)
+{
+    var startItem = (Model.CurrentPage - 1) * Model.PageSize + 1;
+    var endItem = Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalCount);
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-muted">
+            Showing @startItem–@endItem of @Model.TotalCount
+        </small>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="@Model.PageName"
+                           asp-all-route-data="@Model.RouteDataFor(Model.CurrentPage - 1)">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-page="@Model.PageName"
+                               asp-all-route-data="@Model.RouteDataFor(i)">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="@Model.PageName"
+                           asp-all-route-data="@Model.RouteDataFor(Model.CurrentPage + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+}

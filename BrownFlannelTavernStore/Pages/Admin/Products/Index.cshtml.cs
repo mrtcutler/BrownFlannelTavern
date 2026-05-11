@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Products;
 
@@ -16,13 +17,16 @@ public class IndexModel : PageModel
         _context = context;
     }
 
-    public List<Product> Products { get; set; } = [];
+    public PagedList<Product> Products { get; set; } = new(Array.Empty<Product>(), 1, PagedListExtensions.DefaultPageSize, 0);
+    public PaginationViewModel Pagination { get; set; } = null!;
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(int page = 1)
     {
         Products = await _context.Products
             .Include(p => p.Variants)
             .OrderBy(p => p.Name)
-            .ToListAsync();
+            .ToPagedListAsync(page);
+
+        Pagination = PaginationViewModel.From(Products, "/Admin/Products/Index");
     }
 }

@@ -23,7 +23,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var user in Model.AdminUsers)
+        @foreach (var user in Model.AdminUsers.Items)
         {
             <tr>
                 <td>@user.Email</td>
@@ -48,4 +48,6 @@
     </tbody>
 </table>
 
-<a asp-page="/Admin/Index" class="btn btn-outline-bft">Back to Dashboard</a>
+<partial name="_Pagination" model="@Model.Pagination" />
+
+<a asp-page="/Admin/Index" class="btn btn-outline-bft mt-3">Back to Dashboard</a>

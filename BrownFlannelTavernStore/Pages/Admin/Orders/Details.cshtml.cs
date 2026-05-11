@@ -73,7 +73,9 @@ public class DetailsModel : PageModel
             }
         }
 
-        Message = $"Order updated to {NewStatus}.";
+        Message = previousStatus != NewStatus
+            ? $"Order status updated to {NewStatus}."
+            : "Order saved.";
         return Page();
     }
 }

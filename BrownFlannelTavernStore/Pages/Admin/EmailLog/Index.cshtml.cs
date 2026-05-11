@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using BrownFlannelTavernStore.Data;
-using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Utilities;
 
 namespace BrownFlannelTavernStore.Pages.Admin.EmailLog;
 
 [Authorize(Roles = "Owner,Manager")]
 public class IndexModel : PageModel
 {
+    private const int EmailLogPageSize = 50;
+
     private readonly StoreDbContext _context;
 
     public IndexModel(StoreDbContext context)
@@ -16,13 +17,15 @@ public class IndexModel : PageModel
         _context = context;
     }
 
-    public List<Models.EmailLog> EmailLogs { get; set; } = [];
+    public PagedList<Models.EmailLog> EmailLogs { get; set; } = new(Array.Empty<Models.EmailLog>(), 1, EmailLogPageSize, 0);
+    public PaginationViewModel Pagination { get; set; } = null!;
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(int page = 1)
     {
         EmailLogs = await _context.EmailLogs
             .OrderByDescending(e => e.CreatedAt)
-            .Take(100)
-            .ToListAsync();
+            .ToPagedListAsync(page, EmailLogPageSize);
+
+        Pagination = PaginationViewModel.From(EmailLogs, "/Admin/EmailLog/Index");
     }
 }
