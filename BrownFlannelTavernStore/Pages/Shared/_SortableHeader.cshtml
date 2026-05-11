@@ -1,0 +1,7 @@
+@model BrownFlannelTavernStore.Utilities.SortableHeaderViewModel
+
+<th>
+    <a asp-page="@Model.PageName" asp-all-route-data="@Model.SortRouteData()" class="text-decoration-none text-body">
+        @Model.DisplayName@Model.Arrow
+    </a>
+</th>

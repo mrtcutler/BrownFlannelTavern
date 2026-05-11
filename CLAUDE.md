@@ -56,3 +56,25 @@ Tests are a default expectation, not an afterthought. The test project is `Brown
 - Use `[Theory]` + `[InlineData]` for table-driven cases instead of multiple near-duplicate `[Fact]`s.
 
 Run tests from `C:\dev\bft\` with `dotnet test`. CI integration is planned but not yet set up — for now, run tests locally before committing.
+
+### Magic strings: prefer `nameof()`, enums, or static classes
+
+Avoid hardcoded string literals when they refer to a code symbol or a fixed vocabulary of values:
+
+| Instead of | Use |
+|---|---|
+| `"StatusFilter"` (referring to a property) | `nameof(StatusFilter)` |
+| `"Owner"` / `"Manager"` (role names) | `SeedData.OwnerRole` / `SeedData.ManagerRole` constants |
+| `"payment_intent.succeeded"` (Stripe event types) | A static class or constant with named values |
+| `"email.delivered"` / `"email.bounced"` (Resend event types) | Same — central constants |
+| `EmailStatus.Sent.ToString() == "Sent"` | Compare to the enum value directly |
+
+**Why:** Refactoring a property rename automatically updates `nameof()` references but not string literals — so renames silently break route data, attribute bindings, etc. Enums/constants make the set of valid values discoverable in one place and let the compiler catch typos.
+
+**Reasonable exceptions** (don't refactor these):
+- User-facing display text and email body copy (the actual sentences).
+- One-off log messages with specific contextual content (`_logger.LogError("Failed to send to {Recipient}", email)`).
+- C# attribute arguments that can only accept compile-time constants — these often have to stay as string literals if no `const string` is available. If the value appears in 3+ attribute sites, define a `const string` and reference it (`[Authorize(Roles = Roles.OwnerOrManager)]`).
+- Test setup data where the string is incidental.
+
+**Grandfathered:** existing code has some `"Owner,Manager"` literals in `[Authorize]` attributes and Stripe/Resend event-type strings. Don't sweep — extract opportunistically when you're already editing the file.

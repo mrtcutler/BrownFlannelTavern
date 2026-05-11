@@ -1,7 +1,22 @@
 @page
 @model BrownFlannelTavernStore.Pages.Admin.Users.IndexModel
+@using BrownFlannelTavernStore.Data
+@using BrownFlannelTavernStore.Utilities
 @{
     ViewData["Title"] = "Manage Users";
+
+    SortableHeaderViewModel Sortable(string columnKey, string displayName) => new()
+    {
+        PageName = "/Admin/Users/Index",
+        ColumnKey = columnKey,
+        DisplayName = displayName,
+        CurrentSort = Model.SortBy,
+        CurrentDir = Model.SortDir,
+        RouteData = Model.BuildRouteData()
+    };
+
+    var emailHeader = Sortable("email", "Email");
+    var roleHeader = Sortable("role", "Role");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -14,11 +29,30 @@
     <div class="alert alert-success">@Model.Message</div>
 }
 
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small">Role</label>
+            <select asp-for="RoleFilter" class="form-select form-select-sm">
+                <option value="">All</option>
+                <option value="@SeedData.OwnerRole" selected="@(Model.RoleFilter == SeedData.OwnerRole)">@SeedData.OwnerRole</option>
+                <option value="@SeedData.ManagerRole" selected="@(Model.RoleFilter == SeedData.ManagerRole)">@SeedData.ManagerRole</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="hidden" asp-for="SortBy" />
+            <input type="hidden" asp-for="SortDir" />
+            <button type="submit" class="btn btn-sm btn-bft">Apply</button>
+            <a asp-page="/Admin/Users/Index" class="btn btn-sm btn-outline-bft">Clear</a>
+        </div>
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
-            <th>Email</th>
-            <th>Role</th>
+            <partial name="_SortableHeader" model="emailHeader" />
+            <partial name="_SortableHeader" model="roleHeader" />
             <th></th>
         </tr>
     </thead>

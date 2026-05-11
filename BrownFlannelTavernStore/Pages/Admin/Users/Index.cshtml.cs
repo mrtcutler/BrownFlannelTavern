@@ -21,6 +21,15 @@ public class IndexModel : PageModel
     public string? Message { get; set; }
     public PaginationViewModel Pagination { get; set; } = null!;
 
+    [BindProperty(SupportsGet = true)]
+    public string? RoleFilter { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortBy { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SortDir { get; set; }
+
     public async Task OnGetAsync(string? message = null, int page = 1)
     {
         Message = message;
@@ -43,14 +52,35 @@ public class IndexModel : PageModel
         var owners = await _userManager.GetUsersInRoleAsync(SeedData.OwnerRole);
         var managers = await _userManager.GetUsersInRoleAsync(SeedData.ManagerRole);
 
-        var allUsers = owners.Select(u => new AdminUserViewModel
+        IEnumerable<AdminUserViewModel> allUsers = owners.Select(u => new AdminUserViewModel
             { Id = u.Id, Email = u.Email!, Role = SeedData.OwnerRole })
             .Concat(managers.Select(u => new AdminUserViewModel
-            { Id = u.Id, Email = u.Email!, Role = SeedData.ManagerRole }))
-            .OrderBy(u => u.Email);
+            { Id = u.Id, Email = u.Email!, Role = SeedData.ManagerRole }));
+
+        if (!string.IsNullOrWhiteSpace(RoleFilter))
+        {
+            allUsers = allUsers.Where(u => u.Role == RoleFilter);
+        }
+
+        allUsers = (SortBy?.ToLowerInvariant(), SortDir?.ToLowerInvariant()) switch
+        {
+            ("role", "asc") => allUsers.OrderBy(u => u.Role),
+            ("role", _) => allUsers.OrderByDescending(u => u.Role),
+            ("email", "desc") => allUsers.OrderByDescending(u => u.Email),
+            _ => allUsers.OrderBy(u => u.Email)
+        };
 
         AdminUsers = allUsers.ToPagedList(page);
-        Pagination = PaginationViewModel.From(AdminUsers, "/Admin/Users/Index");
+        Pagination = PaginationViewModel.From(AdminUsers, "/Admin/Users/Index", BuildRouteData());
+    }
+
+    public Dictionary<string, string?> BuildRouteData()
+    {
+        var data = new Dictionary<string, string?>();
+        if (!string.IsNullOrWhiteSpace(RoleFilter)) data[nameof(RoleFilter)] = RoleFilter;
+        if (!string.IsNullOrWhiteSpace(SortBy)) data[nameof(SortBy)] = SortBy;
+        if (!string.IsNullOrWhiteSpace(SortDir)) data[nameof(SortDir)] = SortDir;
+        return data;
     }
 }
 

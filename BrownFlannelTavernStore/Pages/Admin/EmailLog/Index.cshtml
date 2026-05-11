@@ -1,29 +1,90 @@
 @page
 @model BrownFlannelTavernStore.Pages.Admin.EmailLog.IndexModel
 @using BrownFlannelTavernStore.Models
+@using BrownFlannelTavernStore.Utilities
 @{
     ViewData["Title"] = "Email Log";
+
+    SortableHeaderViewModel Sortable(string columnKey, string displayName) => new()
+    {
+        PageName = "/Admin/EmailLog/Index",
+        ColumnKey = columnKey,
+        DisplayName = displayName,
+        CurrentSort = Model.SortBy,
+        CurrentDir = Model.SortDir,
+        RouteData = Model.BuildRouteData()
+    };
+
+    var dateHeader = Sortable("date", "Sent At");
+    var recipientHeader = Sortable("recipient", "To");
+    var typeHeader = Sortable("type", "Type");
+    var subjectHeader = Sortable("subject", "Subject");
+    var statusHeader = Sortable("status", "Status");
+    var updatedHeader = Sortable("updated", "Updated");
 }
 
 <h2>Email Log</h2>
-<p class="text-muted">Email send history (most recent first).</p>
+<p class="text-muted">Email send history.</p>
+
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label small">Status</label>
+            <select asp-for="StatusFilter" class="form-select form-select-sm">
+                <option value="">All</option>
+                @foreach (var s in Enum.GetValues<EmailStatus>())
+                {
+                    <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Type</label>
+            <select asp-for="TypeFilter" class="form-select form-select-sm">
+                <option value="">All</option>
+                @foreach (var t in Enum.GetValues<EmailType>())
+                {
+                    <option value="@t" selected="@(Model.TypeFilter == t)">@t</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Recipient contains</label>
+            <input asp-for="RecipientSearchFilter" type="text" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Date from</label>
+            <input asp-for="DateFromFilter" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Date to</label>
+            <input asp-for="DateToFilter" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-1">
+            <input type="hidden" asp-for="SortBy" />
+            <input type="hidden" asp-for="SortDir" />
+            <button type="submit" class="btn btn-sm btn-bft">Apply</button>
+            <a asp-page="/Admin/EmailLog/Index" class="btn btn-sm btn-outline-bft">Clear</a>
+        </div>
+    </div>
+</form>
 
 @if (Model.EmailLogs.TotalCount == 0)
 {
-    <p>No emails logged yet.</p>
+    <p>No emails match the current filters.</p>
 }
 else
 {
     <table class="table table-sm">
         <thead>
             <tr>
-                <th>Sent At</th>
-                <th>To</th>
-                <th>Type</th>
-                <th>Subject</th>
+                <partial name="_SortableHeader" model="dateHeader" />
+                <partial name="_SortableHeader" model="recipientHeader" />
+                <partial name="_SortableHeader" model="typeHeader" />
+                <partial name="_SortableHeader" model="subjectHeader" />
                 <th>Order</th>
-                <th>Status</th>
-                <th>Updated</th>
+                <partial name="_SortableHeader" model="statusHeader" />
+                <partial name="_SortableHeader" model="updatedHeader" />
                 <th>Provider ID</th>
             </tr>
         </thead>

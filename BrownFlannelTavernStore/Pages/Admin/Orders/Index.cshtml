@@ -1,30 +1,75 @@
 @page
 @model BrownFlannelTavernStore.Pages.Admin.Orders.IndexModel
 @using BrownFlannelTavernStore.Models
+@using BrownFlannelTavernStore.Utilities
 @{
     ViewData["Title"] = "Manage Orders";
+
+    SortableHeaderViewModel Sortable(string columnKey, string displayName) => new()
+    {
+        PageName = "/Admin/Orders/Index",
+        ColumnKey = columnKey,
+        DisplayName = displayName,
+        CurrentSort = Model.SortBy,
+        CurrentDir = Model.SortDir,
+        RouteData = Model.BuildRouteData()
+    };
+
+    var idHeader = Sortable("id", "Order #");
+    var customerHeader = Sortable("customer", "Customer");
+    var totalHeader = Sortable("total", "Total");
+    var statusHeader = Sortable("status", "Status");
+    var dateHeader = Sortable("date", "Date");
 }
 
 <h2>Manage Orders</h2>
 
-<div class="mb-3">
-    <a asp-page="/Admin/Orders/Index" class="btn btn-sm @(Model.StatusFilter == null ? "btn-bft" : "btn-outline-bft")">All</a>
-    @foreach (var status in Enum.GetValues<OrderStatus>())
-    {
-        <a asp-page="/Admin/Orders/Index" asp-route-status="@status"
-           class="btn btn-sm @(Model.StatusFilter?.ToString() == status.ToString() ? "btn-bft" : "btn-outline-bft")">@status</a>
-    }
-</div>
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label small">Status</label>
+            <select asp-for="StatusFilter" class="form-select form-select-sm">
+                <option value="">All</option>
+                @foreach (var s in Enum.GetValues<OrderStatus>())
+                {
+                    <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label small">Order #</label>
+            <input asp-for="OrderIdFilter" type="number" min="1" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Date from</label>
+            <input asp-for="DateFromFilter" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Date to</label>
+            <input asp-for="DateToFilter" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Customer (name or email)</label>
+            <input asp-for="CustomerSearchFilter" type="text" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-2">
+            <input type="hidden" asp-for="SortBy" />
+            <input type="hidden" asp-for="SortDir" />
+            <button type="submit" class="btn btn-sm btn-bft">Apply</button>
+            <a asp-page="/Admin/Orders/Index" class="btn btn-sm btn-outline-bft">Clear</a>
+        </div>
+    </div>
+</form>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Order #</th>
-            <th>Customer</th>
+            <partial name="_SortableHeader" model="idHeader" />
+            <partial name="_SortableHeader" model="customerHeader" />
             <th>Email</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Date</th>
+            <partial name="_SortableHeader" model="totalHeader" />
+            <partial name="_SortableHeader" model="statusHeader" />
+            <partial name="_SortableHeader" model="dateHeader" />
             <th></th>
         </tr>
     </thead>
