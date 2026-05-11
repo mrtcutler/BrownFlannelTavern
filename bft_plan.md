@@ -61,13 +61,13 @@ Resolves the gap where `Sent` only meant "Resend accepted the request" — now r
 - ✅ Updated Email Log UI to render status with appropriate badge colors (Sent = secondary/transient, Delivered = green, Bounced/Complained/Failed = red); shows `DeliveryUpdatedAt`
 - ✅ Unit tests: 8 covering each event type, unknown email handling, signature verification, replay protection, missing-headers rejection
 
-### Iteration 2 — Email templates 🔄 IN PROGRESS
+### Iteration 2 — Email templates ✅ DONE (for the unblocked subset)
 Build HTML + plain-text templates for transactional emails. Wired to triggers as each is built (collapsing original Phase 5 wiring into the same iterations for vertical slices).
-- ✅ **Order confirmation** — `OrderConfirmationEmail.Build(Order)` static builder; HTML + plain-text bodies; HTML-encoded customer name/variants for safety; conditional pickup vs shipping section. Wired into `Checkout/Index.cshtml.cs OnPostAsync` after `SaveChangesAsync`. Email send is best-effort: failure is logged but does NOT roll back the order. 8 unit tests covering metadata, content, conditional fulfillment, HTML encoding.
-- ⬜ Shipment / tracking notification (Phase 6 — fulfillment workflow)
-- ⬜ Order status change
-- ⬜ Refund / cancellation confirmation (Phase 7)
-- ⬜ Admin "new order placed" alert
+- ✅ **Order confirmation** — `OrderConfirmationEmail.Build(Order)` static builder; conditional pickup vs shipping section. Wired into `Checkout/Index.cshtml.cs OnPostAsync` after `SaveChangesAsync`. 8 unit tests.
+- ✅ **Admin "new order placed" alert** — `AdminNewOrderEmail.Build(Order, adminEmail)`; recipient from `AdminSettings:OwnerEmail`; fires alongside customer confirmation (independent try/catch so one failure doesn't block the other). 7 unit tests covering metadata, customer contact info, optional phone, fulfillment-method-conditional content, admin dashboard link, text body.
+- ✅ **Order status change** — `OrderStatusChangeEmail.Build(Order, previousStatus)`; status-aware copy via switch expression (Processing/Shipped/Delivered/Cancelled get specific headings + bodies; unknown statuses fall through to generic). Wired into `Admin/Orders/Details.cshtml.cs OnPostAsync` — only fires when `previousStatus != NewStatus` (no-op for self-to-self updates). 10 unit tests covering each branch.
+- ⏸ Shipment / tracking notification — deferred to Phase 6 (fulfillment workflow needs client decisions first)
+- ⏸ Refund / cancellation confirmation — deferred to Phase 7 (cancellation copy is partially covered by status change email; full refund flow waits on Phase 7 client decisions)
 
 ### Note for Phase 8 (deferred)
 `ISmsSender` will be added as a sibling interface to `IEmailSender` when SMS unblocks. Higher-level orchestration (decide which channel based on `NotificationPreference`) belongs in Phase 5's notification triggers, not in Phase 4.

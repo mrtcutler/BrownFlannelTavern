@@ -160,6 +160,19 @@ public class IndexModel : PageModel
             _logger.LogError(ex, "Failed to send order confirmation email for order {OrderId}", order.Id);
         }
 
+        try
+        {
+            var adminEmail = _configuration["AdminSettings:OwnerEmail"];
+            if (!string.IsNullOrWhiteSpace(adminEmail))
+            {
+                await _emailSender.SendAsync(AdminNewOrderEmail.Build(order, adminEmail));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send admin new-order alert for order {OrderId}", order.Id);
+        }
+
         _cartService.ClearCart();
 
         return RedirectToPage("/Orders/Confirmation", new { id = order.Id });

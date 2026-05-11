@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Services.Notifications;
+using BrownFlannelTavernStore.Services.Notifications.Emails;
 
 namespace BrownFlannelTavernStore.Pages.Admin.Orders;
 
@@ -11,10 +13,14 @@ namespace BrownFlannelTavernStore.Pages.Admin.Orders;
 public class DetailsModel : PageModel
 {
     private readonly StoreDbContext _context;
+    private readonly IEmailSender _emailSender;
+    private readonly ILogger<DetailsModel> _logger;
 
-    public DetailsModel(StoreDbContext context)
+    public DetailsModel(StoreDbContext context, IEmailSender emailSender, ILogger<DetailsModel> logger)
     {
         _context = context;
+        _emailSender = emailSender;
+        _logger = logger;
     }
 
     public Order? Order { get; set; }
@@ -48,11 +54,24 @@ public class DetailsModel : PageModel
         if (Order == null)
             return NotFound();
 
+        var previousStatus = Order.Status;
         Order.Status = NewStatus;
         Order.Notes = OrderNotes;
         Order.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        if (previousStatus != NewStatus)
+        {
+            try
+            {
+                await _emailSender.SendAsync(OrderStatusChangeEmail.Build(Order, previousStatus));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send status-change email for order {OrderId}", Order.Id);
+            }
+        }
 
         Message = $"Order updated to {NewStatus}.";
         return Page();
