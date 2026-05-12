@@ -1,9 +1,16 @@
+@{
+    var biz = BusinessOptions.Value;
+    var currentYear = DateTime.UtcNow.Year;
+    var yearText = biz.CopyrightYearStart >= currentYear
+        ? currentYear.ToString()
+        : $"{biz.CopyrightYearStart}–{currentYear}";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Brown Flannel Tavern Store</title>
+    <title>@ViewData["Title"] - @biz.FullStoreName</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -14,7 +21,7 @@
         <nav class="navbar navbar-expand-sm navbar-dark navbar-bft border-bottom box-shadow mb-3">
             <img src="~/images/bft_logo.jpg" class="ms-2 img-fluid img-thumbnail navbar-logo" />
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Brown Flannel Tavern</a>
+                <a class="navbar-brand" asp-area="" asp-page="/Index">@biz.Name</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -65,7 +72,7 @@
 
     <footer class="footer mt-auto">
         <div class="container">
-            <span class="text-white">&copy; 2026 - Brown Flannel Tavern Store - </span><a asp-area="" asp-page="/Privacy">Privacy</a>
+            <span class="text-white">&copy; @yearText - @biz.FullStoreName - </span><a asp-area="" asp-page="/Privacy">Privacy</a>
         </div>
     </footer>
 

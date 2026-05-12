@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using BrownFlannelTavernStore.Models.Settings;
+using Microsoft.Extensions.Options;
 
 namespace BrownFlannelTavernStore.Services.Notifications;
 
@@ -8,12 +10,14 @@ public class ResendEmailSender : IEmailSender
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IOptions<BusinessSettings> _businessOptions;
     private readonly ILogger<ResendEmailSender> _logger;
 
-    public ResendEmailSender(HttpClient httpClient, IConfiguration configuration, ILogger<ResendEmailSender> logger)
+    public ResendEmailSender(HttpClient httpClient, IConfiguration configuration, IOptions<BusinessSettings> businessOptions, ILogger<ResendEmailSender> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _businessOptions = businessOptions;
         _logger = logger;
     }
 
@@ -23,11 +27,11 @@ public class ResendEmailSender : IEmailSender
             ?? throw new InvalidOperationException("Resend:ApiKey is not configured.");
         var fromAddress = _configuration["Resend:FromAddress"]
             ?? throw new InvalidOperationException("Resend:FromAddress is not configured.");
-        var fromName = _configuration["Resend:FromName"];
+        var businessName = _businessOptions.Value.Name;
 
-        var fromHeader = string.IsNullOrWhiteSpace(fromName)
+        var fromHeader = string.IsNullOrWhiteSpace(businessName)
             ? fromAddress
-            : $"{fromName} <{fromAddress}>";
+            : $"{businessName} <{fromAddress}>";
 
         var payload = new
         {

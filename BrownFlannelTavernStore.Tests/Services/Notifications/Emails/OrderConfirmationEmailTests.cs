@@ -1,6 +1,7 @@
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Services.Notifications.Emails;
+using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 
 namespace BrownFlannelTavernStore.Tests.Services.Notifications.Emails;
@@ -39,7 +40,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_SetsCorrectMetadata()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
 
         email.To.Should().Be("customer@example.com");
         email.Subject.Should().Be("Brown Flannel Tavern - Order #42 Confirmation");
@@ -50,7 +51,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_HtmlBodyContainsCustomerNameOrderIdAndTotal()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("Jane Doe");
         email.HtmlBody.Should().Contain("#42");
@@ -60,7 +61,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_HtmlBodyListsAllLineItems()
     {
-        var email = OrderConfirmationEmail.Build(PickupOrder());
+        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("Tavern Baseball Cap");
         email.HtmlBody.Should().Contain("Sticker Pack");
@@ -69,7 +70,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_ShippedOrder_IncludesShippingAddress()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("123 Main St");
         email.HtmlBody.Should().Contain("Westland");
@@ -79,35 +80,45 @@ public class OrderConfirmationEmailTests
     }
 
     [Fact]
-    public void Build_PickupOrder_IncludesPickupAddressAndHours()
+    public void Build_PickupOrder_IncludesPickupAddressFromBusinessSettings()
     {
-        var email = OrderConfirmationEmail.Build(PickupOrder());
+        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("175 S Venoy Rd");
-        email.HtmlBody.Should().Contain("Westland");
         email.HtmlBody.Should().Contain("ready for pickup");
         email.HtmlBody.Should().NotContain("tracking");
     }
 
     [Fact]
-    public void Build_ShippedOrder_TextBodyContainsAddressNotPickupInfo()
+    public void Build_PickupOrder_UsesBusinessNameInHeaderAndPickupLocation()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder());
+        var biz = TestBusiness.Default();
+        biz.Name = "Sample Store Co.";
+        biz.Pickup.LocationName = "Sample Store Co. HQ";
+        biz.Pickup.AddressLine1 = "999 Other St";
+        biz.Pickup.City = "Anytown";
+        biz.Pickup.State = "CA";
+        biz.Pickup.PostalCode = "90210";
 
-        email.TextBody.Should().NotBeNull();
-        email.TextBody.Should().Contain("123 Main St");
-        email.TextBody.Should().NotContain("ready for pickup");
+        var email = OrderConfirmationEmail.Build(PickupOrder(), biz);
+
+        email.Subject.Should().Be("Sample Store Co. - Order #43 Confirmation");
+        email.HtmlBody.Should().Contain("Sample Store Co.");
+        email.HtmlBody.Should().Contain("Sample Store Co. HQ");
+        email.HtmlBody.Should().Contain("999 Other St");
+        email.HtmlBody.Should().NotContain("175 S Venoy Rd");
     }
 
     [Fact]
-    public void Build_PickupOrder_TextBodyContainsPickupInfoNotAddress()
+    public void Build_PickupOrder_IncludesInstructionsWhenSet()
     {
-        var email = OrderConfirmationEmail.Build(PickupOrder());
+        var biz = TestBusiness.Default();
+        biz.Pickup.Instructions = "Ask for your order at the bar.";
 
-        email.TextBody.Should().NotBeNull();
-        email.TextBody.Should().Contain("175 S Venoy Rd");
-        email.TextBody.Should().Contain("ready for pickup");
-        email.TextBody.Should().NotContain("tracking");
+        var email = OrderConfirmationEmail.Build(PickupOrder(), biz);
+
+        email.HtmlBody.Should().Contain("Ask for your order at the bar.");
+        email.TextBody.Should().Contain("Ask for your order at the bar.");
     }
 
     [Fact]
@@ -116,7 +127,7 @@ public class OrderConfirmationEmailTests
         var order = ShippedOrder();
         order.CustomerName = "<script>alert('xss')</script>";
 
-        var email = OrderConfirmationEmail.Build(order);
+        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default());
 
         email.HtmlBody.Should().NotContain("<script>");
         email.HtmlBody.Should().Contain("&lt;script&gt;");

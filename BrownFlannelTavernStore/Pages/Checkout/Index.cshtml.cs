@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Options;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 using BrownFlannelTavernStore.Services;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Services.Notifications.Emails;
@@ -15,17 +17,20 @@ public class IndexModel : PageModel
     private readonly StoreDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly IEmailSender _emailSender;
+    private readonly IOptions<BusinessSettings> _businessOptions;
     private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(CartService cartService, PaymentService paymentService,
         StoreDbContext context, IConfiguration configuration,
-        IEmailSender emailSender, ILogger<IndexModel> logger)
+        IEmailSender emailSender, IOptions<BusinessSettings> businessOptions,
+        ILogger<IndexModel> logger)
     {
         _cartService = cartService;
         _paymentService = paymentService;
         _context = context;
         _configuration = configuration;
         _emailSender = emailSender;
+        _businessOptions = businessOptions;
         _logger = logger;
     }
 
@@ -151,9 +156,11 @@ public class IndexModel : PageModel
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
 
+        var business = _businessOptions.Value;
+
         try
         {
-            await _emailSender.SendAsync(OrderConfirmationEmail.Build(order));
+            await _emailSender.SendAsync(OrderConfirmationEmail.Build(order, business));
         }
         catch (Exception ex)
         {
@@ -165,7 +172,7 @@ public class IndexModel : PageModel
             var adminEmail = _configuration["AdminSettings:OwnerEmail"];
             if (!string.IsNullOrWhiteSpace(adminEmail))
             {
-                await _emailSender.SendAsync(AdminNewOrderEmail.Build(order, adminEmail));
+                await _emailSender.SendAsync(AdminNewOrderEmail.Build(order, adminEmail, business));
             }
         }
         catch (Exception ex)

@@ -1,10 +1,12 @@
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
+using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BrownFlannelTavernStore.Tests.Services.Notifications;
@@ -19,6 +21,7 @@ public class LoggingEmailSenderTests
     private static Mock<ResendEmailSender> NewMockInnerSender() =>
         new(new HttpClient(),
             new ConfigurationBuilder().Build(),
+            Options.Create(TestBusiness.Default()),
             Mock.Of<ILogger<ResendEmailSender>>());
 
     private static EmailMessage SampleMessage(EmailType type = EmailType.OrderConfirmation, int? orderId = null, string? userId = null) =>

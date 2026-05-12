@@ -1,24 +1,26 @@
 using System.Net;
 using System.Text;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 
 namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class AdminNewOrderEmail
 {
-    public static EmailMessage Build(Order order, string adminEmail)
+    public static EmailMessage Build(Order order, string adminEmail, BusinessSettings business)
     {
-        var subject = $"[BFT Admin] New Order #{order.Id} - ${order.TotalAmount:F2}";
+        var prefix = string.IsNullOrWhiteSpace(business.ShortName) ? business.Name : business.ShortName;
+        var subject = $"[{prefix} Admin] New Order #{order.Id} - ${order.TotalAmount:F2}";
         return new EmailMessage(
             To: adminEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order),
+            HtmlBody: BuildHtmlBody(order, business),
             EmailType: EmailType.AdminAlert,
-            TextBody: BuildTextBody(order),
+            TextBody: BuildTextBody(order, business),
             OrderId: order.Id);
     }
 
-    private static string BuildHtmlBody(Order order)
+    private static string BuildHtmlBody(Order order, BusinessSettings business)
     {
         var customerName = WebUtility.HtmlEncode(order.CustomerName);
         var customerEmail = WebUtility.HtmlEncode(order.CustomerEmail);
@@ -80,14 +82,12 @@ public static class AdminNewOrderEmail
                     <tr class="total"><td colspan="3">Total</td><td>${{order.TotalAmount:F2}}</td></tr>
                 </tbody>
             </table>
-
-            <p><a href="https://bft.tylercutler.com/Admin/Orders/Details/{{order.Id}}">View in admin dashboard</a></p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order)
+    private static string BuildTextBody(Order order, BusinessSettings business)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"NEW ORDER RECEIVED - Order #{order.Id} - ${order.TotalAmount:F2}");
@@ -117,8 +117,6 @@ public static class AdminNewOrderEmail
         }
         sb.AppendLine();
         sb.AppendLine($"Total: ${order.TotalAmount:F2}");
-        sb.AppendLine();
-        sb.AppendLine($"View in admin: https://bft.tylercutler.com/Admin/Orders/Details/{order.Id}");
         return sb.ToString();
     }
 

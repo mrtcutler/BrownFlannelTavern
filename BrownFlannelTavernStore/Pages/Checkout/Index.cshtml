@@ -28,14 +28,17 @@ else
                             Ship to my address
                         </label>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input fulfillment-radio" type="radio" name="FulfillmentMethod"
-                               id="fulfillment-pickup" value="Pickup"
-                               checked="@(Model.FulfillmentMethod == FulfillmentMethod.Pickup)" />
-                        <label class="form-check-label" for="fulfillment-pickup">
-                            Pick up at the Brown Flannel Tavern
-                        </label>
-                    </div>
+                    @if (BusinessOptions.Value.Pickup.Enabled)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input fulfillment-radio" type="radio" name="FulfillmentMethod"
+                                   id="fulfillment-pickup" value="Pickup"
+                                   checked="@(Model.FulfillmentMethod == FulfillmentMethod.Pickup)" />
+                            <label class="form-check-label" for="fulfillment-pickup">
+                                Pick up at the @BusinessOptions.Value.Pickup.LocationName
+                            </label>
+                        </div>
+                    }
                 </div>
 
                 <h4>Contact Information</h4>
@@ -79,9 +82,14 @@ else
                 </div>
 
                 <div id="pickup-info" class="alert alert-info d-none">
-                    <strong>Pick up at the Brown Flannel Tavern</strong><br />
-                    175 S Venoy Rd, Westland, MI 48186<br />
-                    <small>Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</small>
+                    <strong>Pick up at the @BusinessOptions.Value.Pickup.LocationName</strong><br />
+                    @BusinessOptions.Value.Pickup.FormattedAddress()<br />
+                    <small>Hours: @BusinessOptions.Value.Pickup.Hours</small>
+                    @if (!string.IsNullOrWhiteSpace(BusinessOptions.Value.Pickup.Instructions))
+                    {
+                        <br />
+                        <small>@BusinessOptions.Value.Pickup.Instructions</small>
+                    }
                     <hr class="my-2" />
                     You will be notified when your order is ready for pickup.
                 </div>

@@ -2,9 +2,11 @@ using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Pages.Admin.Orders;
 using BrownFlannelTavernStore.Services.Notifications;
+using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BrownFlannelTavernStore.Tests.Pages.Admin.Orders;
@@ -36,7 +38,7 @@ public class DetailsModelTests
         mockSender ??= new Mock<IEmailSender>();
         mockSender.Setup(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync(new EmailSendResult("x"));
-        return new DetailsModel(db, mockSender.Object, Mock.Of<ILogger<DetailsModel>>());
+        return new DetailsModel(db, mockSender.Object, Options.Create(TestBusiness.Default()), Mock.Of<ILogger<DetailsModel>>());
     }
 
     [Fact]

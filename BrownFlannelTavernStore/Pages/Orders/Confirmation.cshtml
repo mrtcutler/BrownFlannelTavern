@@ -30,8 +30,8 @@ else
                     @if (Model.Order.FulfillmentMethod == FulfillmentMethod.Pickup)
                     {
                         <p>
-                            <strong>Pickup:</strong> Brown Flannel Tavern, 175 S Venoy Rd, Westland, MI 48186<br />
-                            <small class="text-muted">Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</small><br />
+                            <strong>Pickup:</strong> @BusinessOptions.Value.Pickup.LocationName, @BusinessOptions.Value.Pickup.FormattedAddress()<br />
+                            <small class="text-muted">Hours: @BusinessOptions.Value.Pickup.Hours</small><br />
                             You'll be notified when your order is ready.
                         </p>
                     }

@@ -1,42 +1,44 @@
 using System.Net;
 using System.Text;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 
 namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class OrderStatusChangeEmail
 {
-    public static EmailMessage Build(Order order, OrderStatus previousStatus)
+    public static EmailMessage Build(Order order, OrderStatus previousStatus, BusinessSettings business)
     {
-        var (heading, _) = StatusCopy(order.Status);
-        var subject = $"Brown Flannel Tavern - Order #{order.Id} - {heading}";
+        var (heading, _) = StatusCopy(order.Status, business);
+        var subject = $"{business.Name} - Order #{order.Id} - {heading}";
         return new EmailMessage(
             To: order.CustomerEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order, previousStatus),
+            HtmlBody: BuildHtmlBody(order, business),
             EmailType: EmailType.StatusChange,
-            TextBody: BuildTextBody(order, previousStatus),
+            TextBody: BuildTextBody(order, business),
             OrderId: order.Id);
     }
 
-    private static (string Heading, string Body) StatusCopy(OrderStatus status) => status switch
+    private static (string Heading, string Body) StatusCopy(OrderStatus status, BusinessSettings business) => status switch
     {
         OrderStatus.Processing => ("Your order is being prepared",
             "We're getting your order ready. We'll send you another update when it's on its way."),
         OrderStatus.Shipped => ("Your order has shipped",
             "Your order is on its way. We'll follow up if tracking information becomes available."),
         OrderStatus.Delivered => ("Your order has been delivered",
-            "Your order has been delivered. We hope you enjoy it — thanks for supporting the Brown Flannel Tavern!"),
+            $"Your order has been delivered. We hope you enjoy it — thanks for supporting the {business.Name}!"),
         OrderStatus.Cancelled => ("Your order has been cancelled",
             "Your order has been cancelled. If you have any questions about a refund or what happens next, please reply to this email."),
         _ => ("Order status updated",
             $"Your order status has been updated to {status}.")
     };
 
-    private static string BuildHtmlBody(Order order, OrderStatus previousStatus)
+    private static string BuildHtmlBody(Order order, BusinessSettings business)
     {
+        var businessName = WebUtility.HtmlEncode(business.Name);
         var name = WebUtility.HtmlEncode(order.CustomerName);
-        var (heading, body) = StatusCopy(order.Status);
+        var (heading, body) = StatusCopy(order.Status, business);
         var safeHeading = WebUtility.HtmlEncode(heading);
         var safeBody = WebUtility.HtmlEncode(body);
 
@@ -53,7 +55,7 @@ public static class OrderStatusChangeEmail
             </style>
         </head>
         <body>
-            <h1>Brown Flannel Tavern</h1>
+            <h1>{{businessName}}</h1>
             <p>Hi {{name}},</p>
 
             <div class="status-card">
@@ -64,17 +66,17 @@ public static class OrderStatusChangeEmail
             <p><strong>Order #{{order.Id}}</strong><br>
             Total: ${{order.TotalAmount:F2}}</p>
 
-            <p class="footer">Questions? Reply to this email or contact us at the tavern.</p>
+            <p class="footer">Questions? Reply to this email.</p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order, OrderStatus previousStatus)
+    private static string BuildTextBody(Order order, BusinessSettings business)
     {
-        var (heading, body) = StatusCopy(order.Status);
+        var (heading, body) = StatusCopy(order.Status, business);
         var sb = new StringBuilder();
-        sb.AppendLine("Brown Flannel Tavern");
+        sb.AppendLine(business.Name);
         sb.AppendLine();
         sb.AppendLine($"Hi {order.CustomerName},");
         sb.AppendLine();
@@ -84,7 +86,7 @@ public static class OrderStatusChangeEmail
         sb.AppendLine($"Order #{order.Id}");
         sb.AppendLine($"Total: ${order.TotalAmount:F2}");
         sb.AppendLine();
-        sb.AppendLine("Questions? Reply to this email or contact us at the tavern.");
+        sb.AppendLine("Questions? Reply to this email.");
         return sb.ToString();
     }
 }

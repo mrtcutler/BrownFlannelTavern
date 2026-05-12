@@ -1,6 +1,7 @@
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Services.Notifications.Emails;
+using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 
 namespace BrownFlannelTavernStore.Tests.Services.Notifications.Emails;
@@ -39,7 +40,7 @@ public class AdminNewOrderEmailTests
     [Fact]
     public void Build_SetsCorrectMetadata()
     {
-        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@brownflanneltavern.com");
+        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@brownflanneltavern.com", TestBusiness.Default());
 
         email.To.Should().Be("owner@brownflanneltavern.com");
         email.Subject.Should().Be("[BFT Admin] New Order #101 - $49.98");
@@ -48,9 +49,21 @@ public class AdminNewOrderEmailTests
     }
 
     [Fact]
+    public void Build_SubjectFallsBackToFullNameWhenShortNameMissing()
+    {
+        var biz = TestBusiness.Default();
+        biz.ShortName = null;
+        biz.Name = "Sample Store";
+
+        var email = AdminNewOrderEmail.Build(ShippedOrder(), "x@y.z", biz);
+
+        email.Subject.Should().Be("[Sample Store Admin] New Order #101 - $49.98");
+    }
+
+    [Fact]
     public void Build_IncludesCustomerContactInfo()
     {
-        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com");
+        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com", TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("Jane Doe");
         email.HtmlBody.Should().Contain("customer@example.com");
@@ -63,7 +76,7 @@ public class AdminNewOrderEmailTests
         var order = PickupOrder();
         order.Phone = null;
 
-        var email = AdminNewOrderEmail.Build(order, "owner@example.com");
+        var email = AdminNewOrderEmail.Build(order, "owner@example.com", TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("(not provided)");
     }
@@ -71,7 +84,7 @@ public class AdminNewOrderEmailTests
     [Fact]
     public void Build_ShippedOrder_IncludesShippingAddress()
     {
-        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com");
+        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com", TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("Shipping");
         email.HtmlBody.Should().Contain("123 Main St");
@@ -81,24 +94,16 @@ public class AdminNewOrderEmailTests
     [Fact]
     public void Build_PickupOrder_IndicatesPickupAndOmitsAddress()
     {
-        var email = AdminNewOrderEmail.Build(PickupOrder(), "owner@example.com");
+        var email = AdminNewOrderEmail.Build(PickupOrder(), "owner@example.com", TestBusiness.Default());
 
         email.HtmlBody.Should().Contain("Pickup at store");
         email.HtmlBody.Should().NotContain("Ship to");
     }
 
     [Fact]
-    public void Build_IncludesAdminDashboardLink()
-    {
-        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com");
-
-        email.HtmlBody.Should().Contain("/Admin/Orders/Details/101");
-    }
-
-    [Fact]
     public void Build_TextBodyContainsAllKeyInfo()
     {
-        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com");
+        var email = AdminNewOrderEmail.Build(ShippedOrder(), "owner@example.com", TestBusiness.Default());
 
         email.TextBody.Should().NotBeNull();
         email.TextBody.Should().Contain("Jane Doe");

@@ -1,25 +1,27 @@
 using System.Net;
 using System.Text;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 
 namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class OrderConfirmationEmail
 {
-    public static EmailMessage Build(Order order)
+    public static EmailMessage Build(Order order, BusinessSettings business)
     {
-        var subject = $"Brown Flannel Tavern - Order #{order.Id} Confirmation";
+        var subject = $"{business.Name} - Order #{order.Id} Confirmation";
         return new EmailMessage(
             To: order.CustomerEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order),
+            HtmlBody: BuildHtmlBody(order, business),
             EmailType: EmailType.OrderConfirmation,
-            TextBody: BuildTextBody(order),
+            TextBody: BuildTextBody(order, business),
             OrderId: order.Id);
     }
 
-    private static string BuildHtmlBody(Order order)
+    private static string BuildHtmlBody(Order order, BusinessSettings business)
     {
+        var businessName = WebUtility.HtmlEncode(business.Name);
         var name = WebUtility.HtmlEncode(order.CustomerName);
         var lines = string.Concat(order.Lines.Select(line => $"""
                 <tr>
@@ -30,20 +32,33 @@ public static class OrderConfirmationEmail
                 </tr>
         """));
 
-        var fulfillmentBlock = order.FulfillmentMethod == FulfillmentMethod.Pickup
-            ? """
+        string fulfillmentBlock;
+        if (order.FulfillmentMethod == FulfillmentMethod.Pickup)
+        {
+            var locationName = WebUtility.HtmlEncode(business.Pickup.LocationName ?? business.Name);
+            var address = WebUtility.HtmlEncode(business.Pickup.FormattedAddress());
+            var hours = WebUtility.HtmlEncode(business.Pickup.Hours ?? "");
+            var instructions = !string.IsNullOrWhiteSpace(business.Pickup.Instructions)
+                ? $"<p>{WebUtility.HtmlEncode(business.Pickup.Instructions)}</p>"
+                : "";
+            fulfillmentBlock = $"""
                 <p><strong>Pick up at:</strong><br>
-                Brown Flannel Tavern<br>
-                175 S Venoy Rd, Westland, MI 48186<br>
-                Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)</p>
+                {locationName}<br>
+                {address}<br>
+                Hours: {hours}</p>
+                {instructions}
                 <p>You'll be notified when your order is ready for pickup.</p>
-            """
-            : $"""
+            """;
+        }
+        else
+        {
+            fulfillmentBlock = $"""
                 <p><strong>Shipping to:</strong><br>
                 {WebUtility.HtmlEncode(order.ShippingAddress ?? "")}<br>
                 {WebUtility.HtmlEncode(order.City ?? "")}, {WebUtility.HtmlEncode(order.State ?? "")} {WebUtility.HtmlEncode(order.ZipCode ?? "")}</p>
                 <p>You'll receive another email with tracking information when your order ships.</p>
             """;
+        }
 
         return $$"""
         <!DOCTYPE html>
@@ -60,7 +75,7 @@ public static class OrderConfirmationEmail
             </style>
         </head>
         <body>
-            <h1>Brown Flannel Tavern</h1>
+            <h1>{{businessName}}</h1>
             <h2>Thanks for your order, {{name}}!</h2>
             <p>Your order <strong>#{{order.Id}}</strong> has been received and paid.</p>
 
@@ -78,16 +93,16 @@ public static class OrderConfirmationEmail
             <h3>Fulfillment</h3>
         {{fulfillmentBlock}}
 
-            <p class="footer">Questions? Reply to this email or contact us at the tavern.</p>
+            <p class="footer">Questions? Reply to this email.</p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order)
+    private static string BuildTextBody(Order order, BusinessSettings business)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Brown Flannel Tavern");
+        sb.AppendLine(business.Name);
         sb.AppendLine("Order Confirmation");
         sb.AppendLine();
         sb.AppendLine($"Hi {order.CustomerName},");
@@ -108,9 +123,14 @@ public static class OrderConfirmationEmail
         if (order.FulfillmentMethod == FulfillmentMethod.Pickup)
         {
             sb.AppendLine("Pick up at:");
-            sb.AppendLine("Brown Flannel Tavern");
-            sb.AppendLine("175 S Venoy Rd, Westland, MI 48186");
-            sb.AppendLine("Hours: 11 AM – 2 AM, 7 days a week (Holiday hours may vary)");
+            sb.AppendLine(business.Pickup.LocationName ?? business.Name);
+            sb.AppendLine(business.Pickup.FormattedAddress());
+            sb.AppendLine($"Hours: {business.Pickup.Hours}");
+            if (!string.IsNullOrWhiteSpace(business.Pickup.Instructions))
+            {
+                sb.AppendLine();
+                sb.AppendLine(business.Pickup.Instructions);
+            }
             sb.AppendLine();
             sb.AppendLine("You'll be notified when your order is ready for pickup.");
         }
@@ -123,7 +143,7 @@ public static class OrderConfirmationEmail
             sb.AppendLine("You'll receive another email with tracking information when your order ships.");
         }
         sb.AppendLine();
-        sb.AppendLine("Questions? Reply to this email or contact us at the tavern.");
+        sb.AppendLine("Questions? Reply to this email.");
         return sb.ToString();
     }
 

@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Services.Notifications.Emails;
 
@@ -14,12 +16,14 @@ public class DetailsModel : PageModel
 {
     private readonly StoreDbContext _context;
     private readonly IEmailSender _emailSender;
+    private readonly IOptions<BusinessSettings> _businessOptions;
     private readonly ILogger<DetailsModel> _logger;
 
-    public DetailsModel(StoreDbContext context, IEmailSender emailSender, ILogger<DetailsModel> logger)
+    public DetailsModel(StoreDbContext context, IEmailSender emailSender, IOptions<BusinessSettings> businessOptions, ILogger<DetailsModel> logger)
     {
         _context = context;
         _emailSender = emailSender;
+        _businessOptions = businessOptions;
         _logger = logger;
     }
 
@@ -65,7 +69,7 @@ public class DetailsModel : PageModel
         {
             try
             {
-                await _emailSender.SendAsync(OrderStatusChangeEmail.Build(Order, previousStatus));
+                await _emailSender.SendAsync(OrderStatusChangeEmail.Build(Order, previousStatus, _businessOptions.Value));
             }
             catch (Exception ex)
             {

@@ -30,8 +30,10 @@ public static class SeedData
         }
 
         // Create default Owner account
-        var ownerEmail = configuration["AdminSettings:OwnerEmail"] ?? "owner@brownflanneltavern.com";
-        var ownerPassword = configuration["AdminSettings:OwnerPassword"] ?? "Owner123!";
+        var ownerEmail = configuration["AdminSettings:OwnerEmail"]
+            ?? throw new InvalidOperationException("AdminSettings:OwnerEmail is not configured.");
+        var ownerPassword = configuration["AdminSettings:OwnerPassword"]
+            ?? throw new InvalidOperationException("AdminSettings:OwnerPassword is not configured.");
 
         var ownerUser = await userManager.FindByEmailAsync(ownerEmail);
         if (ownerUser == null)

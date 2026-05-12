@@ -1,10 +1,17 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using BrownFlannelTavernStore.Data;
+using BrownFlannelTavernStore.Models.Settings;
 using BrownFlannelTavernStore.Services;
 using BrownFlannelTavernStore.Services.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOptions<BusinessSettings>()
+    .Bind(builder.Configuration.GetSection(BusinessSettings.SectionName))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<BusinessSettings>, BusinessSettingsValidator>();
 
 // Add services to the container.
 builder.Services.AddRazorPages(options =>

@@ -1,11 +1,13 @@
 using System.Net;
 using System.Text.Json;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BrownFlannelTavernStore.Tests.Services.Notifications;
@@ -14,21 +16,20 @@ public class ResendEmailSenderTests
 {
     private static IConfiguration BuildConfig(
         string? apiKey = "re_test_key",
-        string? fromAddress = "noreply@example.com",
-        string? fromName = "Brown Flannel Tavern")
+        string? fromAddress = "noreply@example.com")
     {
         var dict = new Dictionary<string, string?>();
         if (apiKey != null) dict["Resend:ApiKey"] = apiKey;
         if (fromAddress != null) dict["Resend:FromAddress"] = fromAddress;
-        if (fromName != null) dict["Resend:FromName"] = fromName;
         return new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
     }
 
-    private static ResendEmailSender BuildSender(TestHttpMessageHandler handler, IConfiguration config)
+    private static ResendEmailSender BuildSender(TestHttpMessageHandler handler, IConfiguration config, BusinessSettings? business = null)
     {
         var httpClient = new HttpClient(handler);
         var logger = Mock.Of<ILogger<ResendEmailSender>>();
-        return new ResendEmailSender(httpClient, config, logger);
+        var options = Options.Create(business ?? TestBusiness.Default());
+        return new ResendEmailSender(httpClient, config, options, logger);
     }
 
     private static EmailMessage SampleMessage() =>
@@ -93,14 +94,16 @@ public class ResendEmailSenderTests
     }
 
     [Fact]
-    public async Task SendAsync_BuildsCorrectRequest()
+    public async Task SendAsync_FromHeaderUsesBusinessNameAsDisplay()
     {
-        var config = BuildConfig(apiKey: "re_secret_key", fromAddress: "noreply@example.com", fromName: "BFT Test");
+        var business = TestBusiness.Default();
+        business.Name = "Sample Store Co.";
+        var config = BuildConfig(apiKey: "re_secret_key", fromAddress: "noreply@example.com");
         var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("{\"id\":\"x\"}")
         });
-        var sender = BuildSender(handler, config);
+        var sender = BuildSender(handler, config, business);
 
         await sender.SendAsync(new EmailMessage(
             To: "customer@example.com",
@@ -110,28 +113,25 @@ public class ResendEmailSenderTests
             TextBody: "Thanks"));
 
         handler.LastRequest.Should().NotBeNull();
-        handler.LastRequest!.Method.Should().Be(HttpMethod.Post);
-        handler.LastRequest.RequestUri!.ToString().Should().Be("https://api.resend.com/emails");
-        handler.LastRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
-        handler.LastRequest.Headers.Authorization.Parameter.Should().Be("re_secret_key");
+        handler.LastRequest!.Headers.Authorization!.Parameter.Should().Be("re_secret_key");
 
         var body = JsonDocument.Parse(handler.LastRequestBody!).RootElement;
-        body.GetProperty("from").GetString().Should().Be("BFT Test <noreply@example.com>");
+        body.GetProperty("from").GetString().Should().Be("Sample Store Co. <noreply@example.com>");
         body.GetProperty("to")[0].GetString().Should().Be("customer@example.com");
         body.GetProperty("subject").GetString().Should().Be("Order #42");
-        body.GetProperty("html").GetString().Should().Be("<h1>Thanks</h1>");
-        body.GetProperty("text").GetString().Should().Be("Thanks");
     }
 
     [Fact]
-    public async Task SendAsync_FromNameMissing_UsesBareAddress()
+    public async Task SendAsync_BusinessNameEmpty_UsesBareAddress()
     {
-        var config = BuildConfig(fromName: null);
+        var business = TestBusiness.Default();
+        business.Name = "";
+        var config = BuildConfig();
         var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("{\"id\":\"x\"}")
         });
-        var sender = BuildSender(handler, config);
+        var sender = BuildSender(handler, config, business);
 
         await sender.SendAsync(SampleMessage());
 

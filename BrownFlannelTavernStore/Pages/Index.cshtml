@@ -2,11 +2,12 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home";
+    var biz = BusinessOptions.Value;
 }
 
 <div class="text-center py-5">
-    <h1 class="display-4">Welcome to the Brown Flannel Tavern Store</h1>
-    <p class="lead">Gear up with our official tavern merchandise.</p>
+    <h1 class="display-4">Welcome to the @biz.FullStoreName</h1>
+    <p class="lead">@biz.Tagline</p>
     <a asp-page="/Products/Index" class="btn btn-lg btn-bft mt-3">Shop Now</a>
 </div>
 
