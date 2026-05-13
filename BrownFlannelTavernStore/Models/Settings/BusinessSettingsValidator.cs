@@ -31,6 +31,15 @@ public class BusinessSettingsValidator : IValidateOptions<BusinessSettings>
                 errors.Add($"{BusinessSettings.SectionName}:Pickup:Hours is required when Pickup.Enabled = true.");
         }
 
+        if (string.IsNullOrWhiteSpace(options.ShippingOrigin.AddressLine1))
+            errors.Add($"{BusinessSettings.SectionName}:ShippingOrigin:AddressLine1 is required (source address for shipping rate calculation).");
+        if (string.IsNullOrWhiteSpace(options.ShippingOrigin.City))
+            errors.Add($"{BusinessSettings.SectionName}:ShippingOrigin:City is required.");
+        if (string.IsNullOrWhiteSpace(options.ShippingOrigin.State))
+            errors.Add($"{BusinessSettings.SectionName}:ShippingOrigin:State is required.");
+        if (string.IsNullOrWhiteSpace(options.ShippingOrigin.PostalCode))
+            errors.Add($"{BusinessSettings.SectionName}:ShippingOrigin:PostalCode is required.");
+
         return errors.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(errors);

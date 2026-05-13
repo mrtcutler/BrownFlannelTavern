@@ -20,6 +20,13 @@ public static class TestBusiness
             State = "MI",
             PostalCode = "48186",
             Hours = "11 AM – 2 AM, 7 days a week"
+        },
+        ShippingOrigin = new ShippingOriginSettings
+        {
+            AddressLine1 = "100 Warehouse Way",
+            City = "Westland",
+            State = "MI",
+            PostalCode = "48186"
         }
     };
 }

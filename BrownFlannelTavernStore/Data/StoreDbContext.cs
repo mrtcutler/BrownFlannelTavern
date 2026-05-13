@@ -36,20 +36,20 @@ public class StoreDbContext : IdentityDbContext
         );
 
         modelBuilder.Entity<ProductVariant>().HasData(
-            new ProductVariant { Id = 1, ProductId = 1, Size = "S", Color = "Black", StockQuantity = 25 },
-            new ProductVariant { Id = 2, ProductId = 1, Size = "M", Color = "Black", StockQuantity = 50 },
-            new ProductVariant { Id = 3, ProductId = 1, Size = "L", Color = "Black", StockQuantity = 40 },
-            new ProductVariant { Id = 4, ProductId = 1, Size = "XL", Color = "Black", StockQuantity = 30 },
-            new ProductVariant { Id = 5, ProductId = 1, Size = "S", Color = "Brown", StockQuantity = 20 },
-            new ProductVariant { Id = 6, ProductId = 1, Size = "M", Color = "Brown", StockQuantity = 35 },
-            new ProductVariant { Id = 7, ProductId = 1, Size = "L", Color = "Brown", StockQuantity = 30 },
-            new ProductVariant { Id = 8, ProductId = 1, Size = "XL", Color = "Brown", StockQuantity = 20 },
-            new ProductVariant { Id = 9, ProductId = 2, Size = "S", Color = "Charcoal", StockQuantity = 15 },
-            new ProductVariant { Id = 10, ProductId = 2, Size = "M", Color = "Charcoal", StockQuantity = 30 },
-            new ProductVariant { Id = 11, ProductId = 2, Size = "L", Color = "Charcoal", StockQuantity = 25 },
-            new ProductVariant { Id = 12, ProductId = 2, Size = "XL", Color = "Charcoal", StockQuantity = 20 },
-            new ProductVariant { Id = 13, ProductId = 3, Size = "One Size", Color = "Brown", StockQuantity = 50 },
-            new ProductVariant { Id = 14, ProductId = 3, Size = "One Size", Color = "Black", StockQuantity = 40 }
+            new ProductVariant { Id = 1, ProductId = 1, Size = "S", Color = "Black", StockQuantity = 25, WeightOz = 6m },
+            new ProductVariant { Id = 2, ProductId = 1, Size = "M", Color = "Black", StockQuantity = 50, WeightOz = 6m },
+            new ProductVariant { Id = 3, ProductId = 1, Size = "L", Color = "Black", StockQuantity = 40, WeightOz = 6m },
+            new ProductVariant { Id = 4, ProductId = 1, Size = "XL", Color = "Black", StockQuantity = 30, WeightOz = 6m },
+            new ProductVariant { Id = 5, ProductId = 1, Size = "S", Color = "Brown", StockQuantity = 20, WeightOz = 6m },
+            new ProductVariant { Id = 6, ProductId = 1, Size = "M", Color = "Brown", StockQuantity = 35, WeightOz = 6m },
+            new ProductVariant { Id = 7, ProductId = 1, Size = "L", Color = "Brown", StockQuantity = 30, WeightOz = 6m },
+            new ProductVariant { Id = 8, ProductId = 1, Size = "XL", Color = "Brown", StockQuantity = 20, WeightOz = 6m },
+            new ProductVariant { Id = 9, ProductId = 2, Size = "S", Color = "Charcoal", StockQuantity = 15, WeightOz = 18m },
+            new ProductVariant { Id = 10, ProductId = 2, Size = "M", Color = "Charcoal", StockQuantity = 30, WeightOz = 18m },
+            new ProductVariant { Id = 11, ProductId = 2, Size = "L", Color = "Charcoal", StockQuantity = 25, WeightOz = 18m },
+            new ProductVariant { Id = 12, ProductId = 2, Size = "XL", Color = "Charcoal", StockQuantity = 20, WeightOz = 18m },
+            new ProductVariant { Id = 13, ProductId = 3, Size = "One Size", Color = "Brown", StockQuantity = 50, WeightOz = 4m },
+            new ProductVariant { Id = 14, ProductId = 3, Size = "One Size", Color = "Black", StockQuantity = 40, WeightOz = 4m }
         );
     }
 }

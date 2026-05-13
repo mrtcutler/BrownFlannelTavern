@@ -45,4 +45,8 @@ public class ProductVariant
 
     [Range(0, int.MaxValue)]
     public int StockQuantity { get; set; }
+
+    [Column(TypeName = "decimal(8,2)")]
+    [Range(0, 9999.99)]
+    public decimal WeightOz { get; set; }
 }

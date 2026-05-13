@@ -10,6 +10,7 @@ public class BusinessSettings
     public string Tagline { get; set; } = string.Empty;
     public int CopyrightYearStart { get; set; } = DateTime.UtcNow.Year;
     public PickupSettings Pickup { get; set; } = new();
+    public ShippingOriginSettings ShippingOrigin { get; set; } = new();
     public ContactSettings Contact { get; set; } = new();
 
     public string FullStoreName => string.IsNullOrWhiteSpace(StoreNameSuffix)
@@ -28,6 +29,34 @@ public class PickupSettings
     public string? PostalCode { get; set; }
     public string? Hours { get; set; }
     public string? Instructions { get; set; }
+
+    public string FormattedAddress()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(AddressLine1)) parts.Add(AddressLine1);
+        if (!string.IsNullOrWhiteSpace(AddressLine2)) parts.Add(AddressLine2);
+
+        var cityStateZip = new[] { City, State, PostalCode }
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+        if (cityStateZip.Count > 0)
+        {
+            var cityState = string.Join(", ", cityStateZip.Take(2).Where(s => !string.IsNullOrWhiteSpace(s)));
+            var line = string.IsNullOrWhiteSpace(PostalCode) ? cityState : $"{cityState} {PostalCode}".Trim();
+            parts.Add(line);
+        }
+
+        return string.Join(", ", parts);
+    }
+}
+
+public class ShippingOriginSettings
+{
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? PostalCode { get; set; }
 
     public string FormattedAddress()
     {
