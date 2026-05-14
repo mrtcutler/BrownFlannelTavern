@@ -38,7 +38,16 @@ public class Order
     public string? ZipCode { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]
+    public decimal Subtotal { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal TaxAmount { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
     public decimal TotalAmount { get; set; }
+
+    [StringLength(100)]
+    public string? TaxCalculationId { get; set; }
 
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
 

@@ -19,6 +19,7 @@ else
             <h4>Fulfillment</h4>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <form method="post" id="payment-form">
+                @Html.AntiForgeryToken()
                 <div class="mb-3">
                     <div class="form-check">
                         <input class="form-check-input fulfillment-radio" type="radio" name="FulfillmentMethod"
@@ -59,23 +60,23 @@ else
                     <h4 class="mt-4">Shipping Address</h4>
                     <div class="mb-3">
                         <label class="form-label">Address</label>
-                        <input asp-for="ShippingAddress" class="form-control" />
+                        <input asp-for="ShippingAddress" class="form-control tax-trigger" />
                         <span asp-validation-for="ShippingAddress" class="text-danger"></span>
                     </div>
                     <div class="row">
                         <div class="col-md-5 mb-3">
                             <label class="form-label">City</label>
-                            <input asp-for="City" class="form-control" />
+                            <input asp-for="City" class="form-control tax-trigger" />
                             <span asp-validation-for="City" class="text-danger"></span>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">State</label>
-                            <input asp-for="State" class="form-control" />
+                            <input asp-for="State" class="form-control tax-trigger" />
                             <span asp-validation-for="State" class="text-danger"></span>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Zip Code</label>
-                            <input asp-for="ZipCode" class="form-control" />
+                            <input asp-for="ZipCode" class="form-control tax-trigger" />
                             <span asp-validation-for="ZipCode" class="text-danger"></span>
                         </div>
                     </div>
@@ -104,7 +105,7 @@ else
                 <input type="hidden" name="stripePaymentMethodId" id="stripe-payment-method-id" />
 
                 <button type="submit" id="submit-button" class="btn btn-bft btn-lg w-100">
-                    Pay $@Model.Total.ToString("F2")
+                    Pay $<span id="submit-total">@Model.Subtotal.ToString("F2")</span>
                 </button>
             </form>
         </div>
@@ -121,11 +122,20 @@ else
                         <span>$@item.Total.ToString("F2")</span>
                     </li>
                 }
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <span id="summary-subtotal">$@Model.Subtotal.ToString("F2")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Tax</span>
+                    <span id="summary-tax" class="text-muted">—</span>
+                </li>
                 <li class="list-group-item d-flex justify-content-between fw-bold">
                     <span>Total</span>
-                    <span>$@Model.Total.ToString("F2")</span>
+                    <span id="summary-total">$@Model.Subtotal.ToString("F2")</span>
                 </li>
             </ul>
+            <div id="tax-status" class="small text-muted">Enter your address to calculate tax.</div>
         </div>
     </div>
 }
@@ -146,9 +156,22 @@ else
         const shippingSection = document.getElementById('shipping-section');
         const pickupInfo = document.getElementById('pickup-info');
         const fulfillmentRadios = document.querySelectorAll('.fulfillment-radio');
+        const summarySubtotal = document.getElementById('summary-subtotal');
+        const summaryTax = document.getElementById('summary-tax');
+        const summaryTotal = document.getElementById('summary-total');
+        const submitTotal = document.getElementById('submit-total');
+        const taxStatus = document.getElementById('tax-status');
+        const paymentIntentId = '@Model.PaymentIntentId';
+
+        let currentTotal = @Model.Subtotal.ToString("F2");
+        let taxCalculated = false;
+
+        function getSelectedFulfillment() {
+            return document.querySelector('.fulfillment-radio:checked').value;
+        }
 
         function updateFulfillmentVisibility() {
-            const selected = document.querySelector('.fulfillment-radio:checked').value;
+            const selected = getSelectedFulfillment();
             if (selected === 'Pickup') {
                 shippingSection.classList.add('d-none');
                 pickupInfo.classList.remove('d-none');
@@ -158,13 +181,82 @@ else
             }
         }
 
-        fulfillmentRadios.forEach(radio => radio.addEventListener('change', updateFulfillmentVisibility));
+        fulfillmentRadios.forEach(radio => radio.addEventListener('change', () => {
+            updateFulfillmentVisibility();
+            recalcTax();
+        }));
         updateFulfillmentVisibility();
+
+        function fmt(amount) {
+            return '$' + Number(amount).toFixed(2);
+        }
+
+        async function recalcTax() {
+            const fulfillment = getSelectedFulfillment();
+            const payload = {
+                paymentIntentId: paymentIntentId,
+                fulfillmentMethod: fulfillment,
+                addressLine1: document.querySelector('[name="ShippingAddress"]').value,
+                city: document.querySelector('[name="City"]').value,
+                state: document.querySelector('[name="State"]').value,
+                zipCode: document.querySelector('[name="ZipCode"]').value,
+            };
+
+            if (fulfillment === 'Shipped' && (!payload.addressLine1 || !payload.city || !payload.state || !payload.zipCode)) {
+                taxStatus.textContent = 'Enter your address to calculate tax.';
+                return;
+            }
+
+            taxStatus.textContent = 'Calculating tax...';
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const response = await fetch('?handler=CalculateTax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token,
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({ error: 'Tax calculation failed.' }));
+                    taxStatus.textContent = err.error || 'Tax calculation failed.';
+                    return;
+                }
+                const data = await response.json();
+                summarySubtotal.textContent = fmt(data.subtotal);
+                summaryTax.textContent = fmt(data.tax);
+                summaryTax.classList.remove('text-muted');
+                summaryTotal.textContent = fmt(data.total);
+                submitTotal.textContent = Number(data.total).toFixed(2);
+                currentTotal = data.total;
+                taxCalculated = true;
+                taxStatus.textContent = '';
+            } catch (e) {
+                taxStatus.textContent = 'Tax calculation failed. Please try again.';
+            }
+        }
+
+        document.querySelectorAll('.tax-trigger').forEach(el => {
+            el.addEventListener('blur', recalcTax);
+        });
 
         const form = document.getElementById('payment-form');
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
             const submitButton = document.getElementById('submit-button');
+
+            const fulfillment = getSelectedFulfillment();
+            if (!taxCalculated && fulfillment === 'Shipped') {
+                await recalcTax();
+                if (!taxCalculated) {
+                    document.getElementById('card-errors').textContent = 'Please enter a complete shipping address.';
+                    return;
+                }
+            } else if (!taxCalculated && fulfillment === 'Pickup') {
+                await recalcTax();
+            }
+
             submitButton.disabled = true;
             submitButton.textContent = 'Processing...';
 
@@ -183,7 +275,7 @@ else
             if (error) {
                 document.getElementById('card-errors').textContent = error.message;
                 submitButton.disabled = false;
-                submitButton.textContent = 'Pay $@Model.Total.ToString("F2")';
+                submitButton.textContent = 'Pay $' + Number(currentTotal).toFixed(2);
             } else if (paymentIntent.status === 'succeeded') {
                 document.getElementById('stripe-payment-method-id').value = paymentIntent.payment_method;
                 form.submit();

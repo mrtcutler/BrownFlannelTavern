@@ -62,7 +62,11 @@ else
                         </tbody>
                     </table>
 
-                    <h5 class="text-end">Total: $@Model.Order.TotalAmount.ToString("F2")</h5>
+                    <div class="text-end">
+                        <p class="mb-1">Subtotal: $@Model.Order.Subtotal.ToString("F2")</p>
+                        <p class="mb-1">Tax: $@Model.Order.TaxAmount.ToString("F2")</p>
+                        <h5>Total: $@Model.Order.TotalAmount.ToString("F2")</h5>
+                    </div>
                 </div>
             </div>
 

@@ -111,4 +111,36 @@ public class AdminNewOrderEmailTests
         email.TextBody.Should().Contain("Classic Logo Tee");
         email.TextBody.Should().Contain("$49.98");
     }
+
+    [Fact]
+    public void Build_HtmlBody_IncludesSubtotalTaxAndTotalRows()
+    {
+        var order = ShippedOrder();
+        order.Subtotal = 45.00m;
+        order.TaxAmount = 2.70m;
+        order.TotalAmount = 47.70m;
+
+        var email = AdminNewOrderEmail.Build(order, "owner@example.com", TestBusiness.Default());
+
+        email.HtmlBody.Should().Contain("Subtotal");
+        email.HtmlBody.Should().Contain("$45.00");
+        email.HtmlBody.Should().Contain("Tax");
+        email.HtmlBody.Should().Contain("$2.70");
+        email.HtmlBody.Should().Contain("$47.70");
+    }
+
+    [Fact]
+    public void Build_TextBody_IncludesSubtotalTaxAndTotalLines()
+    {
+        var order = ShippedOrder();
+        order.Subtotal = 45.00m;
+        order.TaxAmount = 2.70m;
+        order.TotalAmount = 47.70m;
+
+        var email = AdminNewOrderEmail.Build(order, "owner@example.com", TestBusiness.Default());
+
+        email.TextBody.Should().Contain("Subtotal: $45.00");
+        email.TextBody.Should().Contain("Tax:      $2.70");
+        email.TextBody.Should().Contain("Total:    $47.70");
+    }
 }

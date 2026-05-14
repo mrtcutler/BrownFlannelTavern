@@ -79,7 +79,9 @@ public static class AdminNewOrderEmail
                 </thead>
                 <tbody>
         {{lines}}
-                    <tr class="total"><td colspan="3">Total</td><td>${{order.TotalAmount:F2}}</td></tr>
+                    <tr><td colspan="3" style="text-align:right;">Subtotal</td><td>${{order.Subtotal:F2}}</td></tr>
+                    <tr><td colspan="3" style="text-align:right;">Tax</td><td>${{order.TaxAmount:F2}}</td></tr>
+                    <tr class="total"><td colspan="3" style="text-align:right;">Total</td><td>${{order.TotalAmount:F2}}</td></tr>
                 </tbody>
             </table>
         </body>
@@ -116,7 +118,9 @@ public static class AdminNewOrderEmail
             sb.AppendLine($"  {line.ProductName}{variantPart} - Qty {line.Quantity} - ${(line.UnitPrice * line.Quantity):F2}");
         }
         sb.AppendLine();
-        sb.AppendLine($"Total: ${order.TotalAmount:F2}");
+        sb.AppendLine($"Subtotal: ${order.Subtotal:F2}");
+        sb.AppendLine($"Tax:      ${order.TaxAmount:F2}");
+        sb.AppendLine($"Total:    ${order.TotalAmount:F2}");
         return sb.ToString();
     }
 
