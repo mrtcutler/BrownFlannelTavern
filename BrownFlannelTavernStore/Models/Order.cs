@@ -49,6 +49,11 @@ public class Order
     [StringLength(100)]
     public string? TaxCalculationId { get; set; }
 
+    [StringLength(100)]
+    public string? StripeRefundId { get; set; }
+
+    public DateTime? RefundedAt { get; set; }
+
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -91,7 +96,8 @@ public enum OrderStatus
     Processing,
     Shipped,
     Delivered,
-    Cancelled
+    Cancelled,
+    Refunded
 }
 
 public enum FulfillmentMethod

@@ -20,6 +20,10 @@ else
     {
         <div class="alert alert-success">@Model.Message</div>
     }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
 
     <div class="row">
         <div class="col-md-6">
@@ -104,7 +108,7 @@ else
         <div class="col-md-3">
             <label class="form-label">Status</label>
             <select asp-for="NewStatus" class="form-select">
-                @foreach (var status in Enum.GetValues<OrderStatus>())
+                @foreach (var status in BrownFlannelTavernStore.Pages.Admin.Orders.DetailsModel.ManuallyAssignableStatuses)
                 {
                     <option value="@status" selected="@(status == Model.Order.Status)">@status</option>
                 }
@@ -118,6 +122,59 @@ else
             <button type="submit" class="btn btn-bft">Update Order</button>
         </div>
     </form>
+
+    @if (Model.CanRefund)
+    {
+        <hr />
+        <h4>Refund</h4>
+        <p class="text-muted small">
+            Issuing a refund returns <strong>$@Model.Order.TotalAmount.ToString("F2")</strong> to the customer's original payment method via Stripe and marks this order as Refunded. This cannot be undone.
+        </p>
+        <button type="button" class="btn btn-danger"
+                data-bs-toggle="modal" data-bs-target="#refundConfirmModal">
+            Refund Order
+        </button>
+
+        <div class="modal fade" id="refundConfirmModal" tabindex="-1"
+             aria-labelledby="refundConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" asp-page-handler="Refund">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="refundConfirmModalLabel">Confirm Refund</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3">
+                                Refund <strong>$@Model.Order.TotalAmount.ToString("F2")</strong>
+                                to <strong>@Model.Order.CustomerName</strong>?
+                            </p>
+                            <p class="text-muted small mb-0">
+                                This refunds the full order via Stripe and cannot be undone. The customer will receive a refund confirmation email automatically.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Refund Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.Order.Status == OrderStatus.Refunded)
+    {
+        <hr />
+        <h4>Refund</h4>
+        <p class="text-muted">
+            This order was refunded on @(Model.Order.RefundedAt?.ToString("MM/dd/yyyy h:mm tt") ?? "—").
+            @if (!string.IsNullOrWhiteSpace(Model.Order.StripeRefundId))
+            {
+                <br />
+                <span>Stripe refund ID: <code>@Model.Order.StripeRefundId</code></span>
+            }
+        </p>
+    }
 
     @if (!string.IsNullOrEmpty(Model.Order.Notes))
     {

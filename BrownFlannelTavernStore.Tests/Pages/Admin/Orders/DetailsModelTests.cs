@@ -1,10 +1,12 @@
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
 using BrownFlannelTavernStore.Pages.Admin.Orders;
+using BrownFlannelTavernStore.Services;
 using BrownFlannelTavernStore.Services.Notifications;
 using BrownFlannelTavernStore.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -33,12 +35,25 @@ public class DetailsModelTests
         return order;
     }
 
+    private static PaymentService StubPaymentService()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Stripe:SecretKey"] = "sk_test_stub" })
+            .Build();
+        return new PaymentService(config);
+    }
+
     private static DetailsModel BuildPage(StoreDbContext db, Mock<IEmailSender>? mockSender = null)
     {
         mockSender ??= new Mock<IEmailSender>();
         mockSender.Setup(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync(new EmailSendResult("x"));
-        return new DetailsModel(db, mockSender.Object, Options.Create(TestBusiness.Default()), Mock.Of<ILogger<DetailsModel>>());
+        return new DetailsModel(
+            db,
+            mockSender.Object,
+            Options.Create(TestBusiness.Default()),
+            StubPaymentService(),
+            Mock.Of<ILogger<DetailsModel>>());
     }
 
     [Fact]
@@ -101,5 +116,80 @@ public class DetailsModelTests
         var result = await page.OnPostAsync(99999);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Mvc.NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task OnPostAsync_StatusSetToRefunded_RejectsAndKeepsExistingStatus()
+    {
+        await using var db = NewInMemoryDb();
+        var order = await SeedOrder(db, OrderStatus.Paid);
+        var page = BuildPage(db);
+        page.NewStatus = OrderStatus.Refunded;
+
+        await page.OnPostAsync(order.Id);
+
+        page.ErrorMessage.Should().Contain("Use the Refund button");
+        var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
+        reloaded.Status.Should().Be(OrderStatus.Paid);
+    }
+
+    [Fact]
+    public async Task OnPostRefundAsync_OrderNotFound_ReturnsNotFound()
+    {
+        await using var db = NewInMemoryDb();
+        var page = BuildPage(db);
+
+        var result = await page.OnPostRefundAsync(99999);
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Mvc.NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task OnPostRefundAsync_AlreadyRefunded_SurfacesErrorAndDoesNotChangeOrder()
+    {
+        await using var db = NewInMemoryDb();
+        var order = await SeedOrder(db, OrderStatus.Refunded);
+        order.RefundedAt = DateTime.UtcNow.AddDays(-1);
+        await db.SaveChangesAsync();
+        var page = BuildPage(db);
+
+        await page.OnPostRefundAsync(order.Id);
+
+        page.ErrorMessage.Should().Contain("already been refunded");
+        page.Message.Should().BeNull();
+        var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
+        reloaded.Status.Should().Be(OrderStatus.Refunded);
+    }
+
+    [Fact]
+    public async Task OnPostRefundAsync_NoStripePaymentIntent_SurfacesError()
+    {
+        await using var db = NewInMemoryDb();
+        var order = new Order
+        {
+            CustomerEmail = "x@y.z",
+            CustomerName = "No Stripe",
+            Status = OrderStatus.Paid,
+            TotalAmount = 10m,
+            StripePaymentIntentId = ""
+        };
+        db.Orders.Add(order);
+        await db.SaveChangesAsync();
+        var page = BuildPage(db);
+
+        await page.OnPostRefundAsync(order.Id);
+
+        page.ErrorMessage.Should().Contain("no Stripe payment");
+        var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
+        reloaded.Status.Should().Be(OrderStatus.Paid);
+    }
+
+    [Fact]
+    public void ManuallyAssignableStatuses_ExcludesRefunded()
+    {
+        DetailsModel.ManuallyAssignableStatuses
+            .Should().NotContain(OrderStatus.Refunded)
+            .And.Contain(OrderStatus.Paid)
+            .And.Contain(OrderStatus.Cancelled);
     }
 }

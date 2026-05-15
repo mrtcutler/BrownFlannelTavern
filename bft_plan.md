@@ -117,12 +117,17 @@ The "fulfiller" user ships orders and enters tracking numbers. Per client: this 
 
 ## Phase 7: Refunds, Cancellations, and Customer Order View ⬜ TO DO  *(direction confirmed by client)*
 
-### 7a — Admin Refund Button
-- Owner or Manager (per client decision) can issue refunds from `/Admin/Orders/Details/{id}`
-- Refund button calls Stripe Refunds API (`RefundService.CreateAsync`); supports full or partial refund
-- Order status updates to `Refunded` (full) or annotated with partial-refund metadata
-- Triggers refund confirmation email to customer
-- **Confirmed by client:** refunds happen inside the app, not by logging into Stripe dashboard — case-by-case per order
+### 7a — Admin Refund Button ✅ DONE
+- Owner + Manager can issue refunds from `/Admin/Orders/Details/{id}` (per decision: matches existing `OwnerOrManagerRoles` scope for the rest of order management; Owner doesn't become a bottleneck)
+- **Full refund only for v1** (per decision): smallest implementation, covers ~90% of cases; partial refunds can be done from the Stripe dashboard until/unless v2 adds them
+- Refund button calls `PaymentService.CreateRefundAsync` → Stripe `RefundService.CreateAsync(paymentIntent: ...)`
+- `Order.Status` transitions to `Refunded`; `RefundedAt` + `StripeRefundId` persisted (migration `20260514162931_AddOrderRefundFields`)
+- New `OrderStatus.Refunded` enum value; filtered out of the manual status dropdown via `DetailsModel.ManuallyAssignableStatuses` and rejected by `OnPostAsync` if submitted directly (refunds must go through the dedicated button)
+- New `RefundConfirmationEmail` template sent on successful refund (subject: "{Business} - Refund Issued for Order #N", with 5–10 business day timing note)
+- Refund button hidden when order is `Refunded` / `Cancelled` / `Pending` or has no `StripePaymentIntentId`; replaced with a "refunded on {date}, Stripe refund ID: ..." readout
+- JS `confirm()` dialog with the dollar amount + customer name guards the refund click since the action is irreversible
+- **Tested:** 10 new test cases (5 for `RefundConfirmationEmail` content/encoding, 4 `OnPostRefundAsync` branches that don't touch Stripe — not-found, already-refunded, missing-payment-intent, dropdown-rejects-Refunded — plus a `ManuallyAssignableStatuses` guard test). 109 tests total.
+- **Not unit-tested:** the Stripe-success and Stripe-failure branches of `OnPostRefundAsync` — same `PaymentService` testability gap noted in Phase 3 Iter 5. Worth extracting `IPaymentService` before Phase 7c (which reuses the refund path).
 
 ### 7b — Customer Order View (Magic-Link)
 - **Magic-link pattern, no customer accounts.** Confirmed by client/developer as the right fit: low-friction for occasional small-business merch buyers; privacy-safe via signed token; avoids account-management UX (signup, password reset, GDPR data export).

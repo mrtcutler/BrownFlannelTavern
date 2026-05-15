@@ -60,6 +60,16 @@ public class PaymentService
         return await service.UpdateAsync(paymentIntentId, options);
     }
 
+    public async Task<Refund> CreateRefundAsync(string paymentIntentId)
+    {
+        var options = new RefundCreateOptions
+        {
+            PaymentIntent = paymentIntentId,
+        };
+        var service = new RefundService();
+        return await service.CreateAsync(options);
+    }
+
     public async Task<TaxCalculationResult> CalculateTaxAsync(
         decimal subtotal,
         TaxAddress address,
