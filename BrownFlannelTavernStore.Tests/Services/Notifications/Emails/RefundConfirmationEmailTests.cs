@@ -8,6 +8,8 @@ namespace BrownFlannelTavernStore.Tests.Services.Notifications.Emails;
 
 public class RefundConfirmationEmailTests
 {
+    private const string TestViewUrl = "https://example.com/Orders/View?token=test";
+
     private static Order RefundedOrder() => new()
     {
         Id = 77,
@@ -22,7 +24,7 @@ public class RefundConfirmationEmailTests
     [Fact]
     public void Build_SetsCorrectMetadata()
     {
-        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default());
+        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.To.Should().Be("customer@example.com");
         email.Subject.Should().Be("Brown Flannel Tavern - Refund Issued for Order #77");
@@ -33,7 +35,7 @@ public class RefundConfirmationEmailTests
     [Fact]
     public void Build_HtmlBody_IncludesCustomerNameOrderIdAndRefundAmount()
     {
-        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default());
+        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("Jane Doe");
         email.HtmlBody.Should().Contain("#77");
@@ -43,7 +45,7 @@ public class RefundConfirmationEmailTests
     [Fact]
     public void Build_TextBody_IncludesRefundAmountAndOrderId()
     {
-        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default());
+        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.TextBody.Should().Contain("$47.70");
         email.TextBody.Should().Contain("#77");
@@ -56,10 +58,20 @@ public class RefundConfirmationEmailTests
         var biz = TestBusiness.Default();
         biz.Name = "Sample Store Co.";
 
-        var email = RefundConfirmationEmail.Build(RefundedOrder(), biz);
+        var email = RefundConfirmationEmail.Build(RefundedOrder(), biz, TestViewUrl);
 
         email.Subject.Should().Be("Sample Store Co. - Refund Issued for Order #77");
         email.HtmlBody.Should().Contain("Sample Store Co.");
+    }
+
+    [Fact]
+    public void Build_HtmlBodyIncludesMagicLink()
+    {
+        var url = "https://bft.example.com/Orders/View?token=abc123";
+        var email = RefundConfirmationEmail.Build(RefundedOrder(), TestBusiness.Default(), url);
+
+        email.HtmlBody.Should().Contain($"href=\"{url}\"");
+        email.TextBody.Should().Contain(url);
     }
 
     [Fact]
@@ -68,7 +80,7 @@ public class RefundConfirmationEmailTests
         var order = RefundedOrder();
         order.CustomerName = "<script>alert('xss')</script>";
 
-        var email = RefundConfirmationEmail.Build(order, TestBusiness.Default());
+        var email = RefundConfirmationEmail.Build(order, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().NotContain("<script>");
         email.HtmlBody.Should().Contain("&lt;script&gt;");

@@ -7,22 +7,23 @@ namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class RefundConfirmationEmail
 {
-    public static EmailMessage Build(Order order, BusinessSettings business)
+    public static EmailMessage Build(Order order, BusinessSettings business, string viewUrl)
     {
         var subject = $"{business.Name} - Refund Issued for Order #{order.Id}";
         return new EmailMessage(
             To: order.CustomerEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order, business),
+            HtmlBody: BuildHtmlBody(order, business, viewUrl),
             EmailType: EmailType.RefundConfirmation,
-            TextBody: BuildTextBody(order, business),
+            TextBody: BuildTextBody(order, business, viewUrl),
             OrderId: order.Id);
     }
 
-    private static string BuildHtmlBody(Order order, BusinessSettings business)
+    private static string BuildHtmlBody(Order order, BusinessSettings business, string viewUrl)
     {
         var businessName = WebUtility.HtmlEncode(business.Name);
         var name = WebUtility.HtmlEncode(order.CustomerName);
+        var safeViewUrl = WebUtility.HtmlEncode(viewUrl);
 
         return $$"""
         <!DOCTYPE html>
@@ -48,13 +49,17 @@ public static class RefundConfirmationEmail
 
             <p>If you have any questions about this refund, just reply to this email.</p>
 
+            <p style="margin-top: 25px;">
+                <a href="{{safeViewUrl}}" style="color: #5C3A1E; text-decoration: underline;">View your order online</a>
+            </p>
+
             <p class="footer">Thanks for shopping with {{businessName}}.</p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order, BusinessSettings business)
+    private static string BuildTextBody(Order order, BusinessSettings business, string viewUrl)
     {
         var sb = new StringBuilder();
         sb.AppendLine(business.Name);
@@ -66,6 +71,8 @@ public static class RefundConfirmationEmail
         sb.AppendLine("Depending on your bank, it can take 5–10 business days for the funds to appear on your statement.");
         sb.AppendLine();
         sb.AppendLine("If you have any questions about this refund, just reply to this email.");
+        sb.AppendLine();
+        sb.AppendLine($"View your order online: {viewUrl}");
         sb.AppendLine();
         sb.AppendLine($"Thanks for shopping with {business.Name}.");
         return sb.ToString();

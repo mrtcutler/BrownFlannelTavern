@@ -8,6 +8,8 @@ namespace BrownFlannelTavernStore.Tests.Services.Notifications.Emails;
 
 public class OrderStatusChangeEmailTests
 {
+    private const string TestViewUrl = "https://example.com/Orders/View?token=test";
+
     private static Order OrderAt(OrderStatus status) => new()
     {
         Id = 50,
@@ -23,7 +25,7 @@ public class OrderStatusChangeEmailTests
     [Fact]
     public void Build_SetsCorrectMetadata()
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Processing), OrderStatus.Paid, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Processing), OrderStatus.Paid, TestBusiness.Default(), TestViewUrl);
 
         email.To.Should().Be("customer@example.com");
         email.EmailType.Should().Be(EmailType.StatusChange);
@@ -37,7 +39,7 @@ public class OrderStatusChangeEmailTests
     [InlineData(OrderStatus.Cancelled, "has been cancelled")]
     public void Build_KnownStatus_UsesAppropriateHeading(OrderStatus status, string expectedPhrase)
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(status), OrderStatus.Paid, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(status), OrderStatus.Paid, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain(expectedPhrase);
         email.Subject.Should().Contain(expectedPhrase);
@@ -46,7 +48,7 @@ public class OrderStatusChangeEmailTests
     [Fact]
     public void Build_CancelledStatus_MentionsRefundContact()
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Cancelled), OrderStatus.Paid, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Cancelled), OrderStatus.Paid, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("refund");
     }
@@ -54,7 +56,7 @@ public class OrderStatusChangeEmailTests
     [Fact]
     public void Build_UnknownStatusFallsThroughToGenericCopy()
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Pending), OrderStatus.Paid, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Pending), OrderStatus.Paid, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("Order status updated");
         email.HtmlBody.Should().Contain("Pending");
@@ -63,7 +65,7 @@ public class OrderStatusChangeEmailTests
     [Fact]
     public void Build_IncludesOrderIdAndTotal()
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Shipped), OrderStatus.Processing, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Shipped), OrderStatus.Processing, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("#50");
         email.HtmlBody.Should().Contain("$24.99");
@@ -75,7 +77,7 @@ public class OrderStatusChangeEmailTests
         var biz = TestBusiness.Default();
         biz.Name = "Sample Store Co.";
 
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Delivered), OrderStatus.Shipped, biz);
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Delivered), OrderStatus.Shipped, biz, TestViewUrl);
 
         email.HtmlBody.Should().Contain("Sample Store Co.");
     }
@@ -83,7 +85,7 @@ public class OrderStatusChangeEmailTests
     [Fact]
     public void Build_TextBodyContainsKeyInfoInPlainText()
     {
-        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Shipped), OrderStatus.Processing, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Shipped), OrderStatus.Processing, TestBusiness.Default(), TestViewUrl);
 
         email.TextBody.Should().NotBeNull();
         email.TextBody.Should().Contain("Jane Doe");
@@ -92,12 +94,22 @@ public class OrderStatusChangeEmailTests
     }
 
     [Fact]
+    public void Build_HtmlBodyIncludesMagicLink()
+    {
+        var url = "https://bft.example.com/Orders/View?token=abc123";
+        var email = OrderStatusChangeEmail.Build(OrderAt(OrderStatus.Shipped), OrderStatus.Processing, TestBusiness.Default(), url);
+
+        email.HtmlBody.Should().Contain($"href=\"{url}\"");
+        email.TextBody.Should().Contain(url);
+    }
+
+    [Fact]
     public void Build_HtmlEncodesCustomerName()
     {
         var order = OrderAt(OrderStatus.Processing);
         order.CustomerName = "<script>alert('xss')</script>";
 
-        var email = OrderStatusChangeEmail.Build(order, OrderStatus.Paid, TestBusiness.Default());
+        var email = OrderStatusChangeEmail.Build(order, OrderStatus.Paid, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().NotContain("<script>");
         email.HtmlBody.Should().Contain("&lt;script&gt;");

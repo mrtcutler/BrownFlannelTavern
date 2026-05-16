@@ -8,6 +8,8 @@ namespace BrownFlannelTavernStore.Tests.Services.Notifications.Emails;
 
 public class OrderConfirmationEmailTests
 {
+    private const string TestViewUrl = "https://example.com/Orders/View?token=test";
+
     private static Order ShippedOrder() => new()
     {
         Id = 42,
@@ -40,7 +42,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_SetsCorrectMetadata()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.To.Should().Be("customer@example.com");
         email.Subject.Should().Be("Brown Flannel Tavern - Order #42 Confirmation");
@@ -51,7 +53,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_HtmlBodyContainsCustomerNameOrderIdAndTotal()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("Jane Doe");
         email.HtmlBody.Should().Contain("#42");
@@ -61,7 +63,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_HtmlBodyListsAllLineItems()
     {
-        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("Tavern Baseball Cap");
         email.HtmlBody.Should().Contain("Sticker Pack");
@@ -70,7 +72,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_ShippedOrder_IncludesShippingAddress()
     {
-        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("123 Main St");
         email.HtmlBody.Should().Contain("Westland");
@@ -82,7 +84,7 @@ public class OrderConfirmationEmailTests
     [Fact]
     public void Build_PickupOrder_IncludesPickupAddressFromBusinessSettings()
     {
-        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(PickupOrder(), TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("175 S Venoy Rd");
         email.HtmlBody.Should().Contain("ready for pickup");
@@ -100,7 +102,7 @@ public class OrderConfirmationEmailTests
         biz.Pickup.State = "CA";
         biz.Pickup.PostalCode = "90210";
 
-        var email = OrderConfirmationEmail.Build(PickupOrder(), biz);
+        var email = OrderConfirmationEmail.Build(PickupOrder(), biz, TestViewUrl);
 
         email.Subject.Should().Be("Sample Store Co. - Order #43 Confirmation");
         email.HtmlBody.Should().Contain("Sample Store Co.");
@@ -115,7 +117,7 @@ public class OrderConfirmationEmailTests
         var biz = TestBusiness.Default();
         biz.Pickup.Instructions = "Ask for your order at the bar.";
 
-        var email = OrderConfirmationEmail.Build(PickupOrder(), biz);
+        var email = OrderConfirmationEmail.Build(PickupOrder(), biz, TestViewUrl);
 
         email.HtmlBody.Should().Contain("Ask for your order at the bar.");
         email.TextBody.Should().Contain("Ask for your order at the bar.");
@@ -129,7 +131,7 @@ public class OrderConfirmationEmailTests
         order.TaxAmount = 2.70m;
         order.TotalAmount = 47.70m;
 
-        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().Contain("Subtotal");
         email.HtmlBody.Should().Contain("$45.00");
@@ -146,11 +148,21 @@ public class OrderConfirmationEmailTests
         order.TaxAmount = 2.70m;
         order.TotalAmount = 47.70m;
 
-        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default(), TestViewUrl);
 
         email.TextBody.Should().Contain("Subtotal: $45.00");
         email.TextBody.Should().Contain("Tax:      $2.70");
         email.TextBody.Should().Contain("Total:    $47.70");
+    }
+
+    [Fact]
+    public void Build_HtmlBodyIncludesMagicLink()
+    {
+        var url = "https://bft.example.com/Orders/View?token=abc123";
+        var email = OrderConfirmationEmail.Build(ShippedOrder(), TestBusiness.Default(), url);
+
+        email.HtmlBody.Should().Contain($"href=\"{url}\"");
+        email.TextBody.Should().Contain(url);
     }
 
     [Fact]
@@ -159,7 +171,7 @@ public class OrderConfirmationEmailTests
         var order = ShippedOrder();
         order.CustomerName = "<script>alert('xss')</script>";
 
-        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default());
+        var email = OrderConfirmationEmail.Build(order, TestBusiness.Default(), TestViewUrl);
 
         email.HtmlBody.Should().NotContain("<script>");
         email.HtmlBody.Should().Contain("&lt;script&gt;");

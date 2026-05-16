@@ -1,5 +1,6 @@
 using BrownFlannelTavernStore.Data;
 using BrownFlannelTavernStore.Models;
+using BrownFlannelTavernStore.Models.Settings;
 using BrownFlannelTavernStore.Pages.Admin.Orders;
 using BrownFlannelTavernStore.Services;
 using BrownFlannelTavernStore.Services.Notifications;
@@ -43,6 +44,17 @@ public class DetailsModelTests
         return new PaymentService(config);
     }
 
+    private static OrderViewTokenService StubTokenService()
+    {
+        var settings = new OrderViewSettings
+        {
+            Secret = "test-secret-that-is-at-least-32-characters-long-for-hmac",
+            BaseUrl = "https://example.com",
+            ExpiryDays = 90,
+        };
+        return new OrderViewTokenService(Options.Create(settings));
+    }
+
     private static DetailsModel BuildPage(StoreDbContext db, Mock<IEmailSender>? mockSender = null)
     {
         mockSender ??= new Mock<IEmailSender>();
@@ -53,6 +65,7 @@ public class DetailsModelTests
             mockSender.Object,
             Options.Create(TestBusiness.Default()),
             StubPaymentService(),
+            StubTokenService(),
             Mock.Of<ILogger<DetailsModel>>());
     }
 

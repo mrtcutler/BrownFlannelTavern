@@ -13,6 +13,11 @@ builder.Services.AddOptions<BusinessSettings>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<BusinessSettings>, BusinessSettingsValidator>();
 
+builder.Services.AddOptions<OrderViewSettings>()
+    .Bind(builder.Configuration.GetSection(OrderViewSettings.SectionName))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<OrderViewSettings>, OrderViewSettingsValidator>();
+
 // Add services to the container.
 builder.Services.AddRazorPages(options =>
 {
@@ -50,6 +55,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<OrderViewTokenService>();
 builder.Services.AddScoped<StripeWebhookService>();
 builder.Services.AddHttpClient<ResendEmailSender>();
 builder.Services.AddScoped<IEmailSender, LoggingEmailSender>();

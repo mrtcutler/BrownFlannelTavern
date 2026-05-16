@@ -7,16 +7,16 @@ namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class OrderStatusChangeEmail
 {
-    public static EmailMessage Build(Order order, OrderStatus previousStatus, BusinessSettings business)
+    public static EmailMessage Build(Order order, OrderStatus previousStatus, BusinessSettings business, string viewUrl)
     {
         var (heading, _) = StatusCopy(order.Status, business);
         var subject = $"{business.Name} - Order #{order.Id} - {heading}";
         return new EmailMessage(
             To: order.CustomerEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order, business),
+            HtmlBody: BuildHtmlBody(order, business, viewUrl),
             EmailType: EmailType.StatusChange,
-            TextBody: BuildTextBody(order, business),
+            TextBody: BuildTextBody(order, business, viewUrl),
             OrderId: order.Id);
     }
 
@@ -34,13 +34,14 @@ public static class OrderStatusChangeEmail
             $"Your order status has been updated to {status}.")
     };
 
-    private static string BuildHtmlBody(Order order, BusinessSettings business)
+    private static string BuildHtmlBody(Order order, BusinessSettings business, string viewUrl)
     {
         var businessName = WebUtility.HtmlEncode(business.Name);
         var name = WebUtility.HtmlEncode(order.CustomerName);
         var (heading, body) = StatusCopy(order.Status, business);
         var safeHeading = WebUtility.HtmlEncode(heading);
         var safeBody = WebUtility.HtmlEncode(body);
+        var safeViewUrl = WebUtility.HtmlEncode(viewUrl);
 
         return $$"""
         <!DOCTYPE html>
@@ -66,13 +67,17 @@ public static class OrderStatusChangeEmail
             <p><strong>Order #{{order.Id}}</strong><br>
             Total: ${{order.TotalAmount:F2}}</p>
 
+            <p style="margin-top: 25px;">
+                <a href="{{safeViewUrl}}" style="color: #5C3A1E; text-decoration: underline;">View your order online</a>
+            </p>
+
             <p class="footer">Questions? Reply to this email.</p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order, BusinessSettings business)
+    private static string BuildTextBody(Order order, BusinessSettings business, string viewUrl)
     {
         var (heading, body) = StatusCopy(order.Status, business);
         var sb = new StringBuilder();
@@ -85,6 +90,8 @@ public static class OrderStatusChangeEmail
         sb.AppendLine();
         sb.AppendLine($"Order #{order.Id}");
         sb.AppendLine($"Total: ${order.TotalAmount:F2}");
+        sb.AppendLine();
+        sb.AppendLine($"View your order online: {viewUrl}");
         sb.AppendLine();
         sb.AppendLine("Questions? Reply to this email.");
         return sb.ToString();

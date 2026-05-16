@@ -19,11 +19,13 @@ public class IndexModel : PageModel
     private readonly IConfiguration _configuration;
     private readonly IEmailSender _emailSender;
     private readonly IOptions<BusinessSettings> _businessOptions;
+    private readonly OrderViewTokenService _orderViewTokenService;
     private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(CartService cartService, PaymentService paymentService,
         StoreDbContext context, IConfiguration configuration,
         IEmailSender emailSender, IOptions<BusinessSettings> businessOptions,
+        OrderViewTokenService orderViewTokenService,
         ILogger<IndexModel> logger)
     {
         _cartService = cartService;
@@ -32,6 +34,7 @@ public class IndexModel : PageModel
         _configuration = configuration;
         _emailSender = emailSender;
         _businessOptions = businessOptions;
+        _orderViewTokenService = orderViewTokenService;
         _logger = logger;
     }
 
@@ -250,9 +253,11 @@ public class IndexModel : PageModel
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
 
+        var viewUrl = _orderViewTokenService.GetViewUrl(order.Id);
+
         try
         {
-            await _emailSender.SendAsync(OrderConfirmationEmail.Build(order, business));
+            await _emailSender.SendAsync(OrderConfirmationEmail.Build(order, business, viewUrl));
         }
         catch (Exception ex)
         {

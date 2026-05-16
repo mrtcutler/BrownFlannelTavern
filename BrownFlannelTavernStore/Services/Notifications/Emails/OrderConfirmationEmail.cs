@@ -7,19 +7,19 @@ namespace BrownFlannelTavernStore.Services.Notifications.Emails;
 
 public static class OrderConfirmationEmail
 {
-    public static EmailMessage Build(Order order, BusinessSettings business)
+    public static EmailMessage Build(Order order, BusinessSettings business, string viewUrl)
     {
         var subject = $"{business.Name} - Order #{order.Id} Confirmation";
         return new EmailMessage(
             To: order.CustomerEmail,
             Subject: subject,
-            HtmlBody: BuildHtmlBody(order, business),
+            HtmlBody: BuildHtmlBody(order, business, viewUrl),
             EmailType: EmailType.OrderConfirmation,
-            TextBody: BuildTextBody(order, business),
+            TextBody: BuildTextBody(order, business, viewUrl),
             OrderId: order.Id);
     }
 
-    private static string BuildHtmlBody(Order order, BusinessSettings business)
+    private static string BuildHtmlBody(Order order, BusinessSettings business, string viewUrl)
     {
         var businessName = WebUtility.HtmlEncode(business.Name);
         var name = WebUtility.HtmlEncode(order.CustomerName);
@@ -95,13 +95,17 @@ public static class OrderConfirmationEmail
             <h3>Fulfillment</h3>
         {{fulfillmentBlock}}
 
+            <p style="margin-top: 25px;">
+                <a href="{{WebUtility.HtmlEncode(viewUrl)}}" style="color: #5C3A1E; text-decoration: underline;">View your order online</a>
+            </p>
+
             <p class="footer">Questions? Reply to this email.</p>
         </body>
         </html>
         """;
     }
 
-    private static string BuildTextBody(Order order, BusinessSettings business)
+    private static string BuildTextBody(Order order, BusinessSettings business, string viewUrl)
     {
         var sb = new StringBuilder();
         sb.AppendLine(business.Name);
@@ -146,6 +150,8 @@ public static class OrderConfirmationEmail
             sb.AppendLine();
             sb.AppendLine("You'll receive another email with tracking information when your order ships.");
         }
+        sb.AppendLine();
+        sb.AppendLine($"View your order online: {viewUrl}");
         sb.AppendLine();
         sb.AppendLine("Questions? Reply to this email.");
         return sb.ToString();

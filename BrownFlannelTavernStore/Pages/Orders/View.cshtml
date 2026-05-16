@@ -1,0 +1,127 @@
+@page
+@model BrownFlannelTavernStore.Pages.Orders.ViewModel
+@using BrownFlannelTavernStore.Models
+@{
+    ViewData["Title"] = Model.Order != null ? $"Order #{Model.Order.Id}" : "Order";
+}
+
+@if (Model.TokenInvalid || Model.Order == null)
+{
+    <div class="text-center py-5">
+        <h2>Sorry, this link isn't valid</h2>
+        <p class="lead">The order link you used is either invalid or has expired.</p>
+        <p>
+            If you need help with your order, please reply to your order confirmation email
+            @if (!string.IsNullOrWhiteSpace(BusinessOptions.Value.Contact.PublicEmail))
+            {
+                <text>or contact us at @BusinessOptions.Value.Contact.PublicEmail</text>
+            }.
+        </p>
+        <a asp-page="/Products/Index" class="btn btn-bft mt-3">Continue Shopping</a>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Order #@Model.Order.Id</h2>
+        <span class="badge bg-bft fs-6">@Model.Order.Status</span>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Name:</strong> @Model.Order.CustomerName</p>
+                            <p class="mb-1"><strong>Email:</strong> @Model.Order.CustomerEmail</p>
+                            @if (!string.IsNullOrWhiteSpace(Model.Order.Phone))
+                            {
+                                <p class="mb-1"><strong>Phone:</strong> @Model.Order.Phone</p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Date:</strong> @Model.Order.CreatedAt.ToString("MMM d, yyyy")</p>
+                            @if (Model.Order.Status == OrderStatus.Refunded && Model.Order.RefundedAt.HasValue)
+                            {
+                                <p class="mb-1"><strong>Refunded:</strong> @Model.Order.RefundedAt.Value.ToString("MMM d, yyyy")</p>
+                            }
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    @if (Model.Order.FulfillmentMethod == FulfillmentMethod.Pickup)
+                    {
+                        <p class="mb-2"><strong>Pickup at:</strong></p>
+                        <p class="mb-1">@BusinessOptions.Value.Pickup.LocationName</p>
+                        <p class="mb-1">@BusinessOptions.Value.Pickup.FormattedAddress()</p>
+                        <p class="mb-1"><small class="text-muted">Hours: @BusinessOptions.Value.Pickup.Hours</small></p>
+                        @if (!string.IsNullOrWhiteSpace(BusinessOptions.Value.Pickup.Instructions))
+                        {
+                            <p class="mb-1"><small class="text-muted">@BusinessOptions.Value.Pickup.Instructions</small></p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="mb-2"><strong>Shipping to:</strong></p>
+                        <p class="mb-1">@Model.Order.ShippingAddress</p>
+                        <p class="mb-1">@Model.Order.City, @Model.Order.State @Model.Order.ZipCode</p>
+
+                        @if (Model.Order.Status == OrderStatus.Shipped || Model.Order.Status == OrderStatus.Delivered)
+                        {
+                            <hr />
+                            @* TODO Phase 6: replace with real tracking number(s) from OrderShipment table *@
+                            <p class="mb-1"><strong>Tracking:</strong> <span class="text-muted">Tracking information will appear here once available.</span></p>
+                        }
+                        else if (Model.Order.Status == OrderStatus.Paid || Model.Order.Status == OrderStatus.Processing)
+                        {
+                            <hr />
+                            <p class="mb-1 text-muted small">You'll receive an email with tracking details when your order ships.</p>
+                        }
+                    }
+                </div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Size / Color</th>
+                        <th>Qty</th>
+                        <th class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Order.Lines)
+                    {
+                        <tr>
+                            <td>@line.ProductName</td>
+                            <td>@line.Size @(line.Color != null ? $"/ {line.Color}" : "")</td>
+                            <td>@line.Quantity</td>
+                            <td class="text-end">$@((line.UnitPrice * line.Quantity).ToString("F2"))</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end">Subtotal</td>
+                        <td class="text-end">$@Model.Order.Subtotal.ToString("F2")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end">Tax</td>
+                        <td class="text-end">$@Model.Order.TaxAmount.ToString("F2")</td>
+                    </tr>
+                    <tr class="fw-bold">
+                        <td colspan="3" class="text-end">Total</td>
+                        <td class="text-end">$@Model.Order.TotalAmount.ToString("F2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="text-center mt-4">
+                <a asp-page="/Products/Index" class="btn btn-outline-bft">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+}

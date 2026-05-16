@@ -129,11 +129,16 @@ The "fulfiller" user ships orders and enters tracking numbers. Per client: this 
 - **Tested:** 10 new test cases (5 for `RefundConfirmationEmail` content/encoding, 4 `OnPostRefundAsync` branches that don't touch Stripe — not-found, already-refunded, missing-payment-intent, dropdown-rejects-Refunded — plus a `ManuallyAssignableStatuses` guard test). 109 tests total.
 - **Not unit-tested:** the Stripe-success and Stripe-failure branches of `OnPostRefundAsync` — same `PaymentService` testability gap noted in Phase 3 Iter 5. Worth extracting `IPaymentService` before Phase 7c (which reuses the refund path).
 
-### 7b — Customer Order View (Magic-Link)
-- **Magic-link pattern, no customer accounts.** Confirmed by client/developer as the right fit: low-friction for occasional small-business merch buyers; privacy-safe via signed token; avoids account-management UX (signup, password reset, GDPR data export).
-- Every order confirmation and status-change email contains a unique URL: `https://bft.tylercutler.com/orders/view?token=<HMAC-signed token>`
-- Token is HMAC-signed over the order ID + a secret; non-enumerable. Optionally adds expiry (e.g., 90 days) so old links naturally age out.
-- The page shows: order summary, items, status, tracking (when present), pickup info if applicable, and a **Cancel order** button when status is pre-Processing.
+### 7b — Customer Order View (Magic-Link) ✅ DONE
+- **Magic-link pattern, no customer accounts** (confirmed). Public page at `/Orders/View?token=<hmac-signed-token>`.
+- `OrderViewTokenService` — HMAC-SHA256 over `{orderId}.{expiresAt}` payload, base64url-encoded. Constant-time signature comparison via `CryptographicOperations.FixedTimeEquals`. Expiry default 90 days.
+- New `OrderViewSettings` config section: `Secret` (≥32 chars, validated on startup), `BaseUrl` (must be absolute URI), `ExpiryDays` (default 90, must be > 0). Validator pattern matches `BusinessSettingsValidator`.
+- Magic link injected into customer-facing emails: `OrderConfirmationEmail`, `OrderStatusChangeEmail`, `RefundConfirmationEmail` — all three now take a `viewUrl` parameter and render "View your order online" link in HTML + text bodies. `AdminNewOrderEmail` is intentionally not updated (admins use the internal `/Admin/Orders/Details/{id}` URL).
+- `/Orders/View` page renders order summary, items, Subtotal/Tax/Total, pickup or shipping address, status badge, refund metadata if applicable. Friendly "this link is invalid or expired" view on bad/expired/forged tokens — does NOT distinguish "missing order" from "bad token" (avoids leaking which order IDs exist).
+- **Tracking section is a placeholder** for shipped orders: shows "Tracking information will appear here once available." Real tracking display deferred to Phase 6 when the `OrderShipment` table lands. TODO comment in the markup points at Phase 6.
+- **Cancel button deferred to Phase 7c** — splits cleanly with the rest of the cancel implementation (Stripe refund call, status flip, email, admin override) instead of leaving a half-functional button in 7b.
+- **Tested:** 21 new test cases. `OrderViewTokenServiceTests` (9): round-trip, tamper, wrong-secret, expired, not-yet-expired, malformed/empty (theory), URL contains base + encoded token, trailing slash stripped from base URL. `ViewModelTests` (4): valid token loads order, invalid/missing token sets TokenInvalid (theory), token for nonexistent order, forged token signed by attacker secret. Email body magic-link tests (3) added to all three customer emails. Existing email tests (5+) updated to pass through a `TestViewUrl` constant for the new `viewUrl` parameter. **130 tests total**.
+- **Config to add to `appsettings.Development.json` and `appsettings.Production.json`** (both gitignored): an `OrderViewSettings` block with a strong random `Secret` (≥32 chars; recommend 64) and the appropriate `BaseUrl` (`https://bft.tylercutler.com` for prod, `https://localhost:5xxx` or whatever the dev port is for local). The committed `appsettings.json` ships with `REPLACE_WITH_64_CHAR_RANDOM_STRING_FOR_HMAC_SIGNING_OF_ORDER_LINKS` as a placeholder.
 
 ### 7c — Customer-Initiated Cancellation
 - Cancel button on customer order page (from 7b) is visible only when `OrderStatus` is `Paid` (i.e., before Processing) — confirmed by client

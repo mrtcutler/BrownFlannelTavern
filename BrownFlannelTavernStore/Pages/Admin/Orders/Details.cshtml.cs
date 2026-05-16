@@ -19,16 +19,19 @@ public class DetailsModel : PageModel
     private readonly IEmailSender _emailSender;
     private readonly IOptions<BusinessSettings> _businessOptions;
     private readonly PaymentService _paymentService;
+    private readonly OrderViewTokenService _orderViewTokenService;
     private readonly ILogger<DetailsModel> _logger;
 
     public DetailsModel(StoreDbContext context, IEmailSender emailSender,
         IOptions<BusinessSettings> businessOptions, PaymentService paymentService,
+        OrderViewTokenService orderViewTokenService,
         ILogger<DetailsModel> logger)
     {
         _context = context;
         _emailSender = emailSender;
         _businessOptions = businessOptions;
         _paymentService = paymentService;
+        _orderViewTokenService = orderViewTokenService;
         _logger = logger;
     }
 
@@ -91,7 +94,8 @@ public class DetailsModel : PageModel
         {
             try
             {
-                await _emailSender.SendAsync(OrderStatusChangeEmail.Build(Order, previousStatus, _businessOptions.Value));
+                var viewUrl = _orderViewTokenService.GetViewUrl(Order.Id);
+                await _emailSender.SendAsync(OrderStatusChangeEmail.Build(Order, previousStatus, _businessOptions.Value, viewUrl));
             }
             catch (Exception ex)
             {
@@ -140,7 +144,8 @@ public class DetailsModel : PageModel
 
             try
             {
-                await _emailSender.SendAsync(RefundConfirmationEmail.Build(Order, _businessOptions.Value));
+                var viewUrl = _orderViewTokenService.GetViewUrl(Order.Id);
+                await _emailSender.SendAsync(RefundConfirmationEmail.Build(Order, _businessOptions.Value, viewUrl));
             }
             catch (Exception ex)
             {
