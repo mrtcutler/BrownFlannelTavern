@@ -45,8 +45,11 @@ public class DetailsModel : PageModel
     [BindProperty]
     public string? OrderNotes { get; set; }
 
-    public static IEnumerable<OrderStatus> ManuallyAssignableStatuses =>
-        Enum.GetValues<OrderStatus>().Where(s => s != OrderStatus.Refunded);
+    // Refunded is excluded from manual selection (use the Refund button instead),
+    // but included when the order's *current* status is Refunded so the dropdown
+    // can display the actual state and the admin can move the order to another status.
+    public static IEnumerable<OrderStatus> GetSelectableStatuses(OrderStatus currentStatus) =>
+        Enum.GetValues<OrderStatus>().Where(s => s != OrderStatus.Refunded || s == currentStatus);
 
     public bool CanRefund => Order is not null
         && Order.Status != OrderStatus.Refunded
@@ -76,7 +79,7 @@ public class DetailsModel : PageModel
         if (Order == null)
             return NotFound();
 
-        if (NewStatus == OrderStatus.Refunded)
+        if (NewStatus == OrderStatus.Refunded && Order.Status != OrderStatus.Refunded)
         {
             ErrorMessage = "Use the Refund button to refund an order — status cannot be set to Refunded directly.";
             NewStatus = Order.Status;

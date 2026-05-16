@@ -198,11 +198,36 @@ public class DetailsModelTests
     }
 
     [Fact]
-    public void ManuallyAssignableStatuses_ExcludesRefunded()
+    public void GetSelectableStatuses_NonRefundedOrder_ExcludesRefunded()
     {
-        DetailsModel.ManuallyAssignableStatuses
+        DetailsModel.GetSelectableStatuses(OrderStatus.Paid)
             .Should().NotContain(OrderStatus.Refunded)
             .And.Contain(OrderStatus.Paid)
             .And.Contain(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public void GetSelectableStatuses_RefundedOrder_IncludesRefundedSoDropdownDisplaysActualState()
+    {
+        DetailsModel.GetSelectableStatuses(OrderStatus.Refunded)
+            .Should().Contain(OrderStatus.Refunded)
+            .And.Contain(OrderStatus.Paid);
+    }
+
+    [Fact]
+    public async Task OnPostAsync_OrderAlreadyRefunded_AllowsSavingNotesWithoutRejecting()
+    {
+        await using var db = NewInMemoryDb();
+        var order = await SeedOrder(db, OrderStatus.Refunded);
+        var page = BuildPage(db);
+        page.NewStatus = OrderStatus.Refunded;
+        page.OrderNotes = "Customer confirmed refund received.";
+
+        await page.OnPostAsync(order.Id);
+
+        page.ErrorMessage.Should().BeNull();
+        var reloaded = await db.Orders.FirstAsync(o => o.Id == order.Id);
+        reloaded.Status.Should().Be(OrderStatus.Refunded);
+        reloaded.Notes.Should().Be("Customer confirmed refund received.");
     }
 }

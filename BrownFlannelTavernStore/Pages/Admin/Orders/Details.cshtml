@@ -104,11 +104,13 @@ else
     <hr />
 
     <h4>Update Order</h4>
-    <form method="post" class="row g-3 align-items-end">
+    @* asp-page-handler="" pins this form to OnPostAsync regardless of the current URL's ?handler= query —
+       prevents the form from re-firing OnPostRefundAsync when re-rendered after a refund error. *@
+    <form method="post" asp-page-handler="" class="row g-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label">Status</label>
             <select asp-for="NewStatus" class="form-select">
-                @foreach (var status in BrownFlannelTavernStore.Pages.Admin.Orders.DetailsModel.ManuallyAssignableStatuses)
+                @foreach (var status in BrownFlannelTavernStore.Pages.Admin.Orders.DetailsModel.GetSelectableStatuses(Model.Order.Status))
                 {
                     <option value="@status" selected="@(status == Model.Order.Status)">@status</option>
                 }
